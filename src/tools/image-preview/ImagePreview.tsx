@@ -113,7 +113,7 @@ export function ImagePreview() {
       <ResizableSplit
         left={
           <div className="pane">
-            <div className="pane-title">Base64 输入</div>
+            <div className="pane-title">Base64 输入 / 图片 URL</div>
             <div className="drop-zone" {...bindDrop}>
               <JsonEditor value={input} onChange={setInput} language="text" />
             </div>
