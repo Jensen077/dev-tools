@@ -39,3 +39,15 @@
 
 - `pnpm tauri build` 偶发 `bundle_dmg.sh` 失败（旧 dmg 占用），但 `.app` 已生成，产物：`src-tauri/target/release/bundle/macos/devbox.app`。
 - React 无 `key` 或依赖数组缺失时切工具交叉渐隐可能残留旧实例——`useApplyHistory` 的回调只看 `pendingLoad/toolId`，勿在 apply 里塞渲染副作用。
+
+## WKWebView 下 HTML5 Drag & Drop 不可靠
+
+- **现象**：字段选择弹层用原生 `draggable` + `onDragStart/Drop` 排序无效果。
+- **根因**：WKWebView（Tauri macOS）对 HTML5 DnD 支持不可靠，事件不触发。
+- **对策**：自绘鼠标拖拽（手柄 `onMouseDown` 启动 → window `mousemove` 算目标槽位实时重排 → `mouseup`/Esc/按钮状态结束），项目里 Settings 页已有同款实现可直接参考。
+
+## WKWebView 下 blob + a.download 下载静默失败
+
+- **现象**：`URL.createObjectURL` + 动态 `<a download>` + `click()` 无任何反应。
+- **根因**：WKWebView 要求 anchor 挂载到 DOM 才处理下载，且 blob 下载落到系统下载目录、无法选路径。
+- **对策**：导出走系统保存对话框：`@tauri-apps/plugin-dialog` 的 `save()` 选路径 + 自定义 `#[tauri::command] save_text_file`（`std::fs::write`）写入；capabilities 需加 `dialog:allow-save`。选择 Rust 写文件而非 `plugin-fs` 可避免 fs scope 白名单配置。

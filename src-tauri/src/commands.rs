@@ -51,3 +51,9 @@ pub async fn compare_json(left: String, right: String) -> Result<DiffNode, Parse
 pub async fn run_curl_script_cmd(script: String) -> Result<HttpResult, String> {
     run_curl_script(&script).await
 }
+
+/// 将文本写入用户选择的路径（导出 CSV/JSONL 用）
+#[tauri::command]
+pub fn save_text_file(path: String, content: String) -> Result<(), String> {
+    std::fs::write(&path, content).map_err(|e| format!("写入失败: {}", e))
+}

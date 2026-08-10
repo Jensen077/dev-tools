@@ -293,6 +293,108 @@
   text-overflow: ellipsis;
 }
 
+/* 表格导出：字段选择弹出层 */
+.field-picker {
+  position: relative;
+  display: flex;
+}
+
+.field-picker-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  width: 260px;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+}
+
+.field-picker-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.field-picker-list {
+  overflow: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.field-picker-item:hover {
+  background: var(--hover);
+}
+
+.field-picker-item input {
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.field-picker-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-picker-drag {
+  cursor: grab;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: -2px;
+  user-select: none;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.field-picker-drag:hover {
+  color: var(--fg);
+}
+
+.field-picker-drag:active {
+  cursor: grabbing;
+}
+
+.field-picker-item.dragging {
+  opacity: 0.4;
+  border: 1px dashed var(--accent);
+}
+
+/* 表格预览分页条 */
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 6px;
+  flex-shrink: 0;
+}
+
+/* 表格预览 */
 .table-wrap {
   overflow: auto;
   flex: 1;
@@ -311,7 +413,7 @@
 .data-table td {
   border: 1px solid var(--border);
   padding: 4px 8px;
-  white-space: nowrap;
+  white-space: pre-wrap;
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
