@@ -18,17 +18,21 @@ export function ImagePreview() {
   const savedDraft = useAppStore((s) => s.drafts["image-preview"]) as Record<string, unknown> | undefined;
   const [input, setInput] = useState((savedDraft?.input as string) ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [imgError, setImgError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const showToast = useToastStore((s) => s.showToast);
 
   useApplyHistory("image-preview", ({ input: savedInput }) => setInput(savedInput ?? ""));
 
   useEffect(() => {
+    setImgError(null);
     if (input.trim()) setError(null);
   }, [input]);
 
   const { src, checkError } = useMemo(() => {
-    if (!input.trim()) return { src: null, checkError: null };
+    const t = input.trim();
+    if (!t) return { src: null, checkError: null };
+    if (/^https?:\/\//i.test(t)) return { src: t, checkError: null };
     const b64 = stripDataUri(input);
     if (!/^[A-Za-z0-9+/=]+$/.test(b64)) {
       return { src: null, checkError: "不是有效的 Base64 编码" };
@@ -104,6 +108,7 @@ export function ImagePreview() {
       </div>
       {error && <div className="error-box">{error}</div>}
       {checkError && <div className="error-box">{checkError}</div>}
+      {imgError && <div className="error-box">{imgError}</div>}
       {isDragging && <div className="drop-hint">松开以载入图片</div>}
       <ResizableSplit
         left={
@@ -118,11 +123,16 @@ export function ImagePreview() {
           <div className="pane">
             <div className="pane-title">图片预览</div>
             {src ? (
-              <img src={src} alt="预览" className="image-preview-img" />
+              <img
+                src={src}
+                alt="预览"
+                className="image-preview-img"
+                onError={() => setImgError("图片加载失败，请检查 URL 或图片数据")}
+              />
             ) : (
               <div className="empty-state">
                 <span className="empty-icon">🖼</span>
-                {input.trim() ? "Base64 格式无效，无法预览" : "粘贴 Base64 或拖入图片文件"}
+                {input.trim() ? "Base64 格式无效，无法预览" : "粘贴 Base64 / 图片 URL 或拖入图片文件"}
               </div>
             )}
           </div>
