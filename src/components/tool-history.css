@@ -1,0 +1,119 @@
+/* ToolHistory 下拉组件样式（颜色沿用 App.css 主题变量） */
+
+.tool-history {
+  position: relative;
+  display: inline-flex;
+}
+
+.tool-history-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tool-history-count {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.tool-history-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  width: 320px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform-origin: top right;
+  animation: history-in var(--dur-med) var(--ease-out);
+}
+
+@keyframes history-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tool-history-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 0 2px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  outline: none;
+  flex-shrink: 0;
+}
+
+.tool-history-search:focus {
+  border-color: var(--accent);
+}
+
+.tool-history-empty {
+  padding: 12px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.tool-history-item {
+  border: 1px solid var(--sidebar-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tool-history-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tool-history-preview {
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: var(--tool-btn-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+
+.tool-history-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* 尊重系统减少动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .tool-history-dropdown {
+    animation: none;
+  }
+}

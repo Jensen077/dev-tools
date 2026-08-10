@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111320"/>
+      <stop offset="1" stop-color="#181A2A"/>
+    </linearGradient>
+    <linearGradient id="sym" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3AE8D5"/>
+      <stop offset="0.55" stop-color="#4A8CFF"/>
+      <stop offset="1" stop-color="#9A6BFF"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx="0.5" cy="0.12" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="squircle">
+      <rect x="40" y="40" width="944" height="944" rx="224"/>
+    </clipPath>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feFlood flood-color="#5B8CFF" flood-opacity="0.35" result="c"/>
+      <feComposite in="c" in2="b" operator="in" result="d"/>
+      <feMerge>
+        <feMergeNode in="d"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="40" width="944" height="944" rx="224" fill="url(#bg)"/>
+  </g>
+  <g clip-path="url(#squircle)">
+    <rect x="40" y="40" width="944" height="944" fill="url(#gloss)"/>
+    <rect x="40" y="40" width="944" height="4" fill="#ffffff" opacity="0.1"/>
+
+    <g filter="url(#glow)">
+      <!-- box 容器 -->
+      <rect x="252" y="300" width="520" height="424" rx="64"
+            fill="url(#sym)" fill-opacity="0.1"
+            stroke="url(#sym)" stroke-width="44" stroke-linejoin="round"/>
+      <!-- 花括号 {} -->
+      <path d="M 402 392 C 358 392 346 414 346 446 L 346 476 C 346 502 330 518 300 526 C 330 534 346 550 346 576 L 346 606 C 346 638 358 660 402 660"
+            fill="none" stroke="url(#sym)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 622 392 C 666 392 678 414 678 446 L 678 476 C 678 502 694 518 724 526 C 694 534 678 550 678 576 L 678 606 C 678 638 666 660 622 660"
+            fill="none" stroke="url(#sym)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

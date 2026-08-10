@@ -1,0 +1,670 @@
+/* 工具页通用样式（颜色取自 App.css 主题变量） */
+
+.tool-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar select,
+.toolbar label {
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+/* 统一按钮体系：.btn 基类 + 变体，颜色取自 App.css 主题变量 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 4px 12px;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--btn-bg-hover);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  border-color: transparent;
+  color: var(--btn-primary-fg);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-bg-hover);
+}
+
+.btn-danger {
+  background: var(--btn-danger-bg);
+  border-color: var(--error-border);
+  color: var(--btn-danger-fg);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--btn-danger-bg-hover);
+}
+
+.btn-sm {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* 按钮内快捷键标签：小号等宽、半透明，随按钮前景色 */
+.btn-hotkey {
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.65;
+  font-family: ui-monospace, monospace;
+  color: inherit;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.error-box {
+  background: var(--error-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--error-fg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  animation: error-in var(--dur-med) var(--ease-out);
+}
+
+@keyframes error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--pane-border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  box-sizing: border-box;
+  background: var(--bg-elevated);
+}
+
+.pane-title {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 4px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 4px;
+}
+
+/* 空状态占位：居中图标 + 提示文案，用于 pane 内尚无内容的场景 */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.empty-state .empty-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+/* 命中列表 */
+.match-list {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.match-item {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.match-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.match-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: var(--tool-btn-fg);
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+
+/* 日志提取：命中选择条 */
+.match-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+
+.match-tab {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tool-btn-fg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.match-tab:hover {
+  background: var(--hover);
+}
+
+.match-tab.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-fg);
+}
+
+/* diff 路径摘要 */
+.path-list {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+}
+
+.path-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+}
+
+.path-item:hover {
+  background: var(--hover);
+}
+
+.badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.badge-added {
+  background: var(--badge-added-bg);
+  color: var(--badge-added-fg);
+}
+
+.badge-removed {
+  background: var(--badge-removed-bg);
+  color: var(--badge-removed-fg);
+}
+
+.badge-modified {
+  background: var(--badge-modified-bg);
+  color: var(--badge-modified-fg);
+}
+
+.path-text {
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-wrap {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.data-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  /* 不透明底保证滚动时表头不穿透半透明背景 */
+  background: var(--table-header-bg);
+  color: var(--accent);
+}
+
+/* 文件拖拽 */
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  outline: none;
+}
+
+/* 仅拖拽时显示虚线框；编辑器获得焦点时不显示，避免蓝色 focus 框 */
+.drop-zone.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+
+.drop-hint {
+  position: fixed;
+  inset: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+  color: var(--accent);
+  font-size: 15px;
+  z-index: 100;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: drop-in var(--dur-med) var(--ease-out);
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 设置页：工具列表 */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  cursor: grab;
+  transition: transform 0.18s var(--ease-out);
+}
+
+.settings-item:not(:has(> .drag-handle)) {
+  cursor: default;
+}
+
+.settings-list.dragging .settings-item {
+  cursor: grabbing;
+}
+
+/* 提交帧抑制过渡，避免落点弹跳 */
+.settings-list.no-anim .settings-item {
+  transition: none;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.settings-toggle input {
+  margin: 0;
+}
+
+.settings-name {
+  font-size: 13px;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  font-size: 14px;
+  letter-spacing: -2px;
+  user-select: none;
+  line-height: 1;
+  padding: 2px 0;
+}
+
+.drag-handle:hover {
+  color: var(--fg);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.settings-item.dragging {
+  opacity: 0.35;
+  border-style: dashed;
+  box-shadow: none;
+  transition: none;
+}
+
+/* 跟随鼠标的浮动拖拽卡片 */
+.settings-drag-card {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  min-width: 160px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  background: var(--sidebar-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-lg);
+  will-change: transform;
+}
+
+/* 新工具通用表单/列表样式 */
+.text-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.kv-item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  align-items: baseline;
+}
+
+.kv-item:hover {
+  background: var(--hover);
+}
+
+.kv-key {
+  flex-shrink: 0;
+  min-width: 90px;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+}
+
+.kv-value {
+  color: var(--fg);
+  word-break: break-all;
+  font-family: ui-monospace, monospace;
+}
+
+.kv-expired {
+  background: var(--error-bg);
+  color: var(--error-fg);
+}
+
+.kv-expired .kv-key {
+  color: var(--error-fg);
+}
+
+.algo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.algo-chip:hover {
+  background: var(--hover);
+}
+
+.algo-chip input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.hash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.hash-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.hash-item:hover {
+  background: var(--hover);
+}
+
+.hash-key {
+  flex-shrink: 0;
+  width: 64px;
+  color: var(--accent);
+  font-family: ui-monospace, monospace;
+}
+
+.hash-value {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+  font-family: ui-monospace, monospace;
+}
+
+.regex-match {
+  background: rgba(76, 175, 80, 0.35);
+}
+
+.req-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.req-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.req-url {
+  flex: 3;
+}
+
+.req-name {
+  flex: 1;
+}
+
+.req-value {
+  flex: 2;
+}
+
+.req-headers,
+.req-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resp-headers {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.image-preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* 列表项入场动效（一次性） */
+.match-item,
+.hash-item,
+.path-item,
+.tool-history-item {
+  animation: item-in var(--dur-med) var(--ease-out) both;
+}
+
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 尊重系统减少动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .error-box,
+  .drop-hint,
+  .match-item,
+  .hash-item,
+  .path-item,
+  .tool-history-item {
+    animation: none;
+  }
+
+  .settings-item {
+    transition: none;
+  }
+
+  .btn {
+    transition: none;
+  }
+}

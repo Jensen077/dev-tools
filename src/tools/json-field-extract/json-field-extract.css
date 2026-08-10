@@ -1,0 +1,60 @@
+/* 字段选择区样式 */
+
+.field-list-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow: auto;
+  max-height: 200px;
+}
+
+.field-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.field-chip:hover {
+  background: var(--hover);
+}
+
+.field-chip input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.custom-field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+}
+
+.custom-field input {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.custom-field button {
+  font-size: 12px;
+  padding: 4px 10px;
+}
