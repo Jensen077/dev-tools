@@ -14,6 +14,7 @@ import { Jwt } from "./jwt/Jwt";
 import { CurlRunner } from "./curl-runner/CurlRunner";
 import { ImagePreview } from "./image-preview/ImagePreview";
 import { ParamConvert } from "./param-convert/ParamConvert";
+import { Uuid } from "./uuid/Uuid";
 import { ToolIcon } from "../components/icons";
 
 export interface ToolDef {
@@ -40,4 +41,5 @@ export const TOOLS: ToolDef[] = [
   { id: "regex-tester", name: "正则测试", icon: <ToolIcon name="regex-tester" />, component: RegexTester },
   { id: "jwt", name: "JWT 解析", icon: <ToolIcon name="jwt" />, component: Jwt },
   { id: "param-convert", name: "参数转换", icon: <ToolIcon name="param-convert" />, component: ParamConvert },
+  { id: "uuid", name: "UUID", icon: <ToolIcon name="uuid" />, component: Uuid },
 ];

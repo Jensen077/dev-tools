@@ -9,6 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@tauri-apps/api": "^2",

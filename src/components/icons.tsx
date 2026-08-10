@@ -155,6 +155,15 @@ const icons: Record<string, ReactNode> = {
         <path d="M2 11l3-3 2 2 4-4 3 3" />
       </>,
     ),
+
+    IcoG(
+      "uuid",
+      <>
+        <rect x="2" y="3" width="12" height="10" rx="1" />
+        <line x1="4" y1="6" x2="12" y2="6" />
+        <line x1="4" y1="9" x2="9" y2="9" />
+      </>,
+    ),
   ]),
 };
 
