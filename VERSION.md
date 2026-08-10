@@ -3,6 +3,11 @@
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 
+## v1.0.5 — 2026-08-10
+
+**新增**
+- 图片预览支持直接粘贴 http(s) URL 预览远程图片：输入框自动识别 `http://`/`https://` 开头的链接并渲染，加载失败显示错误提示
+
 ## v1.0.4 — 2026-08-10
 
 **新增**
