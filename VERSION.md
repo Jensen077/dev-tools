@@ -2,6 +2,9 @@
 
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
+> **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
+
+## Unreleased
 
 ## v1.0.10 — 2026-08-11
 

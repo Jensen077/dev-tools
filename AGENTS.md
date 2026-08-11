@@ -17,10 +17,16 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 - `.github/workflows/pages.yml` — push 到 `main`：`pnpm build` 产 `dist/` 部署到 GitHub Pages（纯前端静态站点，网页版降级见 `backend.ts`）。仓库 Settings → Pages → Source 选「GitHub Actions」（一次设置）
 - `.github/workflows/release.yml` — push `v*` 标签：矩阵构建 macos(universal dmg)/ubuntu(deb+AppImage)/windows(msi+nsis)，挂资产到草稿 Release
 
-### 发版流程（每次发版照此走）
+### 发版策略：批次发布 + 网页版持续交付
 
-1. **开发期**：往 `VERSION.md` 补一条**技术性**版本条目（改了哪些文件/怎么实现，面向开发者与 AI）
-2. **同步版本号**：三处对齐 `package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`（如 1.0.7）
+- **main 每次 push 只更新网页版**（pages.yml 自动），**不** bump 版本、**不**打 tag——改动对用户即时可用，零成本
+- **桌面 Release 攒批发**：积累到一批值得用户升级的改动（几个功能或一次里程碑）才走发版流程，避免频繁触发 7 分钟三平台矩阵
+- **VERSION.md 积压式**：每个功能落地时先记一条 `## Unreleased`（技术性），到发版日补上日期与版本号，不必每个 commit 都动三处版本号
+
+### 发版流程（攒批后照此走）
+
+1. **开发期**：往 `VERSION.md` 补一条**技术性**条目到 `## Unreleased`（改了哪些文件/怎么实现，面向开发者与 AI）；发版当天把 `Unreleased` 改为 `## vX.Y.Z — 日期`
+2. **同步版本号**：三处对齐 `package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`（如 1.0.10）
 3. **提交合并**：改动合到 `main`（PR 或直接 push）→ 触发 `pages.yml` 自动更新网页版
 4. **打 tag**：`git tag vX.Y.Z && git push origin vX.Y.Z` → 触发 `release.yml`
 5. **等 CI 构完**（约 7 分钟，三平台矩阵）→ 自动建草稿 Release，含 6 个资产：
