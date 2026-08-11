@@ -8,6 +8,7 @@ pub mod format;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             commands::fmt_json,
             commands::min_json,
@@ -15,6 +16,7 @@ pub fn run() {
             commands::extract_json_cmd,
             commands::compare_json,
             commands::run_curl_script_cmd,
+            commands::save_text_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
