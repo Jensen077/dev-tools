@@ -10,10 +10,31 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 - `cargo test`（在 `src-tauri/` 下）— Rust 逻辑测试（format/extract/diff/curl，curl 端到端测试真实调用系统 curl）
 - `pnpm tauri build` — 产出 `src-tauri/target/release/bundle/macos/devbox.app`（未签名/未公证）
 
-## CI 工作流
+## CI 与发版
 
-- `.github/workflows/pages.yml` — push 到 `main`：`pnpm build` 产 `dist/` 部署到 GitHub Pages（纯前端静态站点，网页版降级见 `backend.ts`）
-- `.github/workflows/release.yml` — push `v*` 标签：矩阵构建 macos(universal dmg)/ubuntu(deb+AppImage)/windows(msi+nsis)，挂资产到草稿 Release；本地无需改动，`git tag vX.Y.Z && git push origin vX.Y.Z` 即触发。仓库 Settings → Pages → Source 选「GitHub Actions」（Pages 一次设置）
+### 工作流
+
+- `.github/workflows/pages.yml` — push 到 `main`：`pnpm build` 产 `dist/` 部署到 GitHub Pages（纯前端静态站点，网页版降级见 `backend.ts`）。仓库 Settings → Pages → Source 选「GitHub Actions」（一次设置）
+- `.github/workflows/release.yml` — push `v*` 标签：矩阵构建 macos(universal dmg)/ubuntu(deb+AppImage)/windows(msi+nsis)，挂资产到草稿 Release
+
+### 发版流程（每次发版照此走）
+
+1. **开发期**：往 `VERSION.md` 补一条**技术性**版本条目（改了哪些文件/怎么实现，面向开发者与 AI）
+2. **同步版本号**：三处对齐 `package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`（如 1.0.7）
+3. **提交合并**：改动合到 `main`（PR 或直接 push）→ 触发 `pages.yml` 自动更新网页版
+4. **打 tag**：`git tag vX.Y.Z && git push origin vX.Y.Z` → 触发 `release.yml`
+5. **等 CI 构完**（约 7 分钟，三平台矩阵）→ 自动建草稿 Release，含 6 个资产：
+   - macOS `devbox_*_universal.dmg` + `devbox_universal.app.tar.gz`
+   - Linux `*.deb` + `*.AppImage`
+   - Windows `*.msi` + `*_setup.exe`（NSIS）
+6. **填用户说明**：打开草稿 Release（`https://github.com/<owner>/<repo>/releases`），在 body 写**面向终端用户**的发行说明（新功能/为何升级/注意事项）
+7. **Publish**：审核资产 + 说明后发布。草稿对外不可见，发布后才有公开下载链接
+
+### VERSION.md vs Release body 分工（勿混淆）
+
+- `VERSION.md` — **技术性**，开发者/AI 源：改了哪些文件、怎么实现、版本号同步点
+- GitHub Release body — **用户向**：用户能得到什么、为何升级、未签名/网页版限制等注意事项
+- 两者不重复，别尝试从 VERSION.md 自动提取 release body（技术文本要解析裁剪，脆弱）
 
 ## 架构
 
@@ -76,6 +97,6 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 功能开发的完整链路：**澄清形态（问清合并/拆分与默认值）→ 按「新工具三步」实现 → `pnpm build` 验证 → 功能收尾补文档**。文档四件套：
 
 - `README.md` — 新增/变更功能时同步「功能一览」
-- `VERSION.md` — 发版前补一条版本记录，再同步三处版本号。**技术性记录**（改了哪些文件/怎么实现），面向开发者与 AI；面向终端用户的发行说明写在 GitHub Release body（发布草稿时手写），两者不重复
+- `VERSION.md` — 发版前补一条技术性版本记录 + 同步三处版本号（完整发版流程与 Release body 分工见「CI 与发版」节）
 - `MEMORY.md` — 踩坑点（现象→根因→对策），踩过就写，避免 AI 反复踩
 - `AGENTS.md` — 本文件的架构/约定/陷阱随新认知持续更新
