@@ -28,3 +28,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local/personal (not committed)
+.workbuddy/
+build-windows.bat
