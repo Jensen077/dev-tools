@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { backend } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { JsonOutput } from "../../components/JsonOutput";
+import type { editor } from "monaco-editor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
 import { useFileDrop } from "../../hooks/useFileDrop";
@@ -40,6 +41,7 @@ export function Formatter() {
   const [error, setError] = useState<ParseError | null>(null);
   const [autoRun, setAutoRun] = useState((savedDraft?.autoRun as boolean) ?? true);
   const fileRef = useRef<HTMLInputElement>(null);
+  const outputEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const extractedJson = useAppStore((s) => s.extractedJson);
   const setExtractedJson = useAppStore((s) => s.setExtractedJson);
   const addHistory = useHistoryStore((s) => s.addHistory);
@@ -127,6 +129,14 @@ export function Formatter() {
     }
   }, [output, showToast]);
 
+  /** 全部折叠/展开输出编辑器 */
+  const foldAll = useCallback(() => {
+    outputEditorRef.current?.getAction("editor.foldAll")?.run();
+  }, []);
+  const unfoldAll = useCallback(() => {
+    outputEditorRef.current?.getAction("editor.unfoldAll")?.run();
+  }, []);
+
   useSaveDraft("json-formatter", { input, indent, autoRun });
 
   return (
@@ -184,8 +194,17 @@ export function Formatter() {
         }
         right={
           <div className="pane">
-            <div className="pane-title">输出</div>
-            <JsonOutput value={output} />
+            <div className="pane-title">
+              输出
+              <span className="spacer" />
+              <button className="btn btn-sm" onClick={foldAll} disabled={!output}>
+                全部闭合
+              </button>
+              <button className="btn btn-sm" onClick={unfoldAll} disabled={!output}>
+                全部展开
+              </button>
+            </div>
+            <JsonOutput value={output} editorRef={outputEditorRef} />
           </div>
         }
       />

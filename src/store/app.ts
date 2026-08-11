@@ -10,12 +10,16 @@ interface AppState {
   setExtractedJson: (json: string) => void;
   theme: Theme;
   toggleTheme: () => void;
+  /** JSON 悬停预览 + 点击复制（json-handle 式）开关 */
+  jsonPreview: boolean;
+  setJsonPreview: (on: boolean) => void;
   /** 切换工具时的输入草稿，避免切换丢失未保存内容 */
   drafts: Record<string, unknown>;
   setDraft: (toolId: string, data: unknown) => void;
 }
 
 const THEME_KEY = "devbox-theme";
+const JSON_PREVIEW_KEY = "devbox-json-preview";
 
 /** 读取持久化主题，非法值/异常一律回落 light（Meta 白色画布优先） */
 function readTheme(): Theme {
@@ -23,6 +27,15 @@ function readTheme(): Theme {
     return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
   } catch {
     return "light";
+  }
+}
+
+/** 读取 JSON 预览开关，非法值/异常回落默认开启 */
+function readJsonPreview(): boolean {
+  try {
+    return localStorage.getItem(JSON_PREVIEW_KEY) !== "off";
+  } catch {
+    return true;
   }
 }
 
@@ -49,6 +62,15 @@ export const useAppStore = create<AppState>((set) => ({
     const next: Theme = useAppStore.getState().theme === "dark" ? "light" : "dark";
     saveTheme(next);
     set({ theme: next });
+  },
+  jsonPreview: readJsonPreview(),
+  setJsonPreview: (on) => {
+    try {
+      localStorage.setItem(JSON_PREVIEW_KEY, on ? "on" : "off");
+    } catch {
+      // 存储不可用时忽略，内存态开关仍生效
+    }
+    set({ jsonPreview: on });
   },
   drafts: {},
   setDraft: (toolId, data) => set((s) => ({ drafts: { ...s.drafts, [toolId]: data } })),

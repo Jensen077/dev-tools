@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { TOOLS } from "../index";
 import type { ToolDef } from "../index";
 import { useSettingsStore } from "../../store/settings";
+import { useAppStore } from "../../store/app";
 import "../tool.css";
 
 /** 拖拽中的实时数据 */
@@ -19,6 +20,8 @@ export function Settings() {
   const setEnabled = useSettingsStore((s) => s.setEnabled);
   const reorder = useSettingsStore((s) => s.reorder);
   const reset = useSettingsStore((s) => s.reset);
+  const jsonPreview = useAppStore((s) => s.jsonPreview);
+  const setJsonPreview = useAppStore((s) => s.setJsonPreview);
 
   const [drag, setDrag] = useState<DragState | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -195,6 +198,15 @@ export function Settings() {
           恢复默认
         </button>
       </div>
+      <label className="settings-pref">
+        <input
+          type="checkbox"
+          className="switch"
+          checked={jsonPreview}
+          onChange={(e) => setJsonPreview(e.target.checked)}
+        />
+        悬停预览 JSON 值（点击 key 复制）
+      </label>
       <div
         className={`settings-list${isDragging ? " dragging" : ""}${suppressAnim ? " no-anim" : ""}`}
         ref={listRef}

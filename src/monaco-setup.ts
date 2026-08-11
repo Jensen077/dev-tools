@@ -1,9 +1,15 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
+// hover 浮层组件只在 editor.main 链式引入，editor.api 到不了；
+// 不加载则 registerHoverProvider 唤不起 tooltip（json-handle 式 key 预览依赖它）
+import "monaco-editor/esm/vs/editor/contrib/hover/browser/hoverContribution.js";
 import "monaco-editor/esm/vs/languages/definitions/shell/register.js";
 // codicon 字体的 @font-face 只在 editor.main 链式引入，editor.api 到不了；
 // 缺了它折叠箭头/展开按钮等 codicon 图标全渲染为空字形，这里显式补上
 import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
+import { findKeyAt, scanJsonKeys } from "./utils/jsonHover";
+import { useAppStore } from "./store/app";
+import { useToastStore } from "./store/toast";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker.js?worker";
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker.js?worker";
 import { loader } from "@monaco-editor/react";
@@ -60,6 +66,62 @@ monaco.languages.setLanguageConfiguration("json", {
     { open: "[", close: "]", notIn: ["string"] },
     { open: '"', close: '"', notIn: ["string"] },
   ],
+});
+
+// json-handle 式 key 预览：悬停 key/value 区间时浮层展示该 key 的值。
+// 文档变化才重扫（按 model + versionId 缓存），大 JSON 悬停不卡。
+const hoverCache = new WeakMap<monaco.editor.ITextModel, { version: number; spans: ReturnType<typeof scanJsonKeys> }>();
+monaco.languages.registerHoverProvider("json", {
+  provideHover(model, position) {
+    if (!useAppStore.getState().jsonPreview) return null;
+    let cached = hoverCache.get(model);
+    if (!cached || cached.version !== model.getVersionId()) {
+      cached = { version: model.getVersionId(), spans: scanJsonKeys(model.getValue()) };
+      hoverCache.set(model, cached);
+    }
+    const span = findKeyAt(cached.spans, model.getOffsetAt(position));
+    if (!span) return null;
+    let pretty = model.getValue().slice(span.valueStart, span.valueEnd).trim();
+    try {
+      pretty = JSON.stringify(JSON.parse(pretty), null, 2);
+    } catch {
+      // 保持原文，不作为悬停失败条件
+    }
+    return {
+      contents: [{ value: "```json\n" + pretty + "\n```" }],
+      range: {
+        startLineNumber: position.lineNumber,
+        startColumn: position.column,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      },
+    };
+  },
+});
+
+// json-handle 式点击复制：只读编辑器（输出侧）点击 key/value 区间即复制该值。
+// 复用同一份扫描缓存，点击处命中失败（如空白/括号）时静默忽略。
+monaco.editor.onDidCreateEditor((ed) => {
+  ed.onMouseDown((e) => {
+    if (!useAppStore.getState().jsonPreview) return;
+    if (!ed.getOption(monaco.editor.EditorOption.readOnly)) return;
+    const pos = e.target.position;
+    if (!pos) return;
+    const model = ed.getModel();
+    if (!model) return;
+    let cached = hoverCache.get(model);
+    if (!cached || cached.version !== model.getVersionId()) {
+      cached = { version: model.getVersionId(), spans: scanJsonKeys(model.getValue()) };
+      hoverCache.set(model, cached);
+    }
+    const span = findKeyAt(cached.spans, model.getOffsetAt(pos));
+    if (!span) return;
+    const value = model.getValue().slice(span.valueStart, span.valueEnd).trim();
+    navigator.clipboard
+      .writeText(value)
+      .then(() => useToastStore.getState().showToast(`已复制 ${span.key}`))
+      .catch(() => useToastStore.getState().showToast("复制失败", "error"));
+  });
 });
 
 self.MonacoEnvironment = {
