@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { JsonEditor } from "../../components/JsonEditor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
 import { useSaveDraft } from "../../hooks/useSaveDraft";
 import { ToolHistory } from "../../components/ToolHistory";
 import { useToastStore } from "../../store/toast";
-import { ResizableSplit } from "../../components/ResizableSplit";
 import {
   base64Decode,
   base64Encode,
@@ -19,67 +18,64 @@ import "../tool.css";
 type Mode = "b64-enc" | "b64-dec" | "url-enc" | "url-dec" | "upper" | "lower";
 
 const MODES: { id: Mode; label: string }[] = [
-  { id: "b64-enc", label: "Base64 编码" },
-  { id: "b64-dec", label: "Base64 解码" },
+  { id: "b64-enc", label: "B64 编码" },
+  { id: "b64-dec", label: "B64 解码" },
   { id: "url-enc", label: "URL 编码" },
   { id: "url-dec", label: "URL 解码" },
   { id: "upper", label: "转大写" },
   { id: "lower", label: "转小写" },
 ];
 
+/** 按当前模式做单向转换，非法输入抛异常 */
+function transform(input: string, mode: Mode): string {
+  switch (mode) {
+    case "b64-enc":
+      return base64Encode(input);
+    case "b64-dec":
+      return base64Decode(input);
+    case "url-enc":
+      return urlEncode(input);
+    case "url-dec":
+      return urlDecode(input);
+    case "upper":
+      return toUpperCase(input);
+    case "lower":
+      return toLowerCase(input);
+  }
+}
+
 export function EncodeConvert() {
   const savedDraft = useAppStore((s) => s.drafts["encode-convert"]) as Record<string, unknown> | undefined;
   const [mode, setMode] = useState<Mode>((savedDraft?.mode as Mode) ?? "b64-enc");
   const [input, setInput] = useState((savedDraft?.input as string) ?? "");
+  const [output, setOutput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const addHistory = useHistoryStore((s) => s.addHistory);
   const showToast = useToastStore((s) => s.showToast);
 
   useApplyHistory("encode-convert", ({ input }) => setInput(input ?? ""));
 
-  const { output, outputError } = useMemo(() => {
-    if (!input) return { output: "", outputError: null };
-    try {
-      let out = "";
-      switch (mode) {
-        case "b64-enc":
-          out = base64Encode(input);
-          break;
-        case "b64-dec":
-          out = base64Decode(input);
-          break;
-        case "url-enc":
-          out = urlEncode(input);
-          break;
-        case "url-dec":
-          out = urlDecode(input);
-          break;
-        case "upper":
-          out = toUpperCase(input);
-          break;
-        case "lower":
-          out = toLowerCase(input);
-          break;
-      }
-      return { output: out, outputError: null };
-    } catch (e) {
-      return { output: "", outputError: e instanceof Error ? e.message : String(e) };
-    }
-  }, [mode, input]);
-
-  // useMemo 保持纯函数，setState 移到 effect 内
-  useEffect(() => {
-    setError(outputError);
-  }, [outputError]);
-
-  const record = () => {
+  const run = () => {
     if (!input) return;
-    addHistory({
-      toolId: "encode-convert",
-      toolName: "编码转换",
-      action: MODES.find((m) => m.id === mode)?.label ?? mode,
-      payload: { input },
-    });
+    setError(null);
+    try {
+      setOutput(transform(input, mode));
+      addHistory({
+        toolId: "encode-convert",
+        toolName: "编码转换",
+        action: MODES.find((m) => m.id === mode)?.label ?? mode,
+        payload: { input },
+      });
+    } catch (e) {
+      setOutput("");
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const exchange = () => {
+    setInput(output);
+    setOutput(input);
+    setError(null);
   };
 
   const copy = async () => {
@@ -97,48 +93,56 @@ export function EncodeConvert() {
   return (
     <div className="tool-page">
       <div className="toolbar">
-        <label>
-          模式
-          <select
-            value={mode}
-            onChange={(e) => {
-              const next = MODES.find((m) => m.id === e.target.value);
-              if (next) setMode(next.id);
-            }}
-          >
+        <span className="seg-wrap">
+          <span className="seg-label">模式</span>
+          <span className="seg">
             {MODES.map((m) => (
-              <option key={m.id} value={m.id}>
+              <button
+                type="button"
+                key={m.id}
+                className={`seg-btn${mode === m.id ? " on" : ""}`}
+                onClick={() => setMode(m.id)}
+              >
                 {m.label}
-              </option>
+              </button>
             ))}
-          </select>
-        </label>
-        <button className="btn" onClick={record} disabled={!input}>
-          记录
+          </span>
+        </span>
+        <span className="spacer" />
+        <button className="btn" onClick={() => setInput("")}>清空</button>
+        <ToolHistory toolId="encode-convert" />
+      </div>
+
+      <div className="pane">
+        <div className="pane-title">输入（待转换文本）</div>
+        <JsonEditor value={input} onChange={setInput} language="text" />
+      </div>
+
+      <div className="action-row">
+        <button className="btn btn-primary" data-hotkey="run" onClick={run} disabled={!input}>
+          {MODES.find((m) => m.id === mode)?.label ?? mode}
+          <span className="btn-hotkey">⌘↩</span>
+        </button>
+        <button className="btn" onClick={exchange} disabled={!output}>
+          交换上下
         </button>
         <button className="btn" data-hotkey="copy" onClick={copy} disabled={!output}>
           复制结果
           <span className="btn-hotkey">⇧⌘C</span>
         </button>
-        <span className="spacer" />
-        <button className="btn" onClick={() => setInput("")}>清空</button>
-        <ToolHistory toolId="encode-convert" />
+        {output && (
+          <span className="hint">
+            输入 {input.length} 字符 → 输出 {output.length} 字符
+          </span>
+        )}
       </div>
+
       {error && <div className="error-box">{error}</div>}
-      <ResizableSplit
-        left={
-          <div className="pane">
-            <div className="pane-title">输入</div>
-            <JsonEditor value={input} onChange={setInput} language="text" />
-          </div>
-        }
-        right={
-          <div className="pane">
-            <div className="pane-title">输出（实时）</div>
-            <JsonEditor value={output} readOnly language="text" />
-          </div>
-        }
-      />
+
+      <div className="pane">
+        <div className="pane-title">输出（转换结果）</div>
+        <JsonEditor value={output} readOnly language="text" />
+      </div>
     </div>
   );
 }

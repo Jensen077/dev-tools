@@ -3,6 +3,17 @@
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 
+## v1.0.10 — 2026-08-11
+
+**编码转换工具改为 base64.us 格局**（参考 https://base64.us/ 的纵向流布局，UI 沿用 Meta (Store) 风格）
+
+- `src/tools/encode-convert/EncodeConvert.tsx` 重构：去掉 `ResizableSplit` 左右分栏与实时预览，改为「上输入 → 中操作行 → 下输出」纵向布局，对齐 base64.us 交互——主按钮按当前模式单向转换（文案随模式变，`data-hotkey="run"` 支持 `⌘↩` 触发），新增「交换上下」按钮（输入↔输出互换，便于编解码链式操作），复制按钮移到中间操作行（`data-hotkey="copy"`，`⇧⌘C`）
+- 模式下拉改为分段控件（复用 `.seg`/`.seg-btn`），标签压缩（`B64 编码`/`B64 解码`/`URL 编码`/`URL 解码`/`转大写`/`转小写`）
+- `output` 由 `useMemo` 实时计算改为 state，仅 run 时计算；出错走 error-box（按钮行与输出之间）；成功后显示「输入 N 字符 → 输出 M 字符」统计
+- 保留 6 种模式、`useSaveDraft`（input+mode）、`useApplyHistory` 历史回填、`addHistory`（run 时记录）与 ToolHistory；转换逻辑复用 `src/utils/encoding.ts` 零改动
+- `src/tools/tool.css` 新增 `.action-row`（中间操作行）最小样式
+- 版本号同步三处：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json` → 1.0.10
+
 ## v1.0.9 — 2026-08-11
 
 **UI 视觉语言切换为 Meta (Store) 风格**（自 v1.0.8 的 GitHub Primer；设计契约见 `skills/dev-tools-design/DESIGN.md`）
