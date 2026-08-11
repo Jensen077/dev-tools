@@ -103,12 +103,12 @@ export function RegexTester() {
         },
         options: {
           inlineClassName: "regex-match",
-          overviewRuler: { color: "#4caf50", position: 3 },
+          overviewRuler: { color: theme === "dark" ? "#3fb950" : "#1a7f37", position: 3 },
         },
       };
     });
     ed.deltaDecorations([], decos);
-  }, [matches]);
+  }, [matches, theme]);
 
   // 命中或文本变化时重绘高亮
   useEffect(() => {

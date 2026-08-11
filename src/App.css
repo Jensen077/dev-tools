@@ -1,101 +1,99 @@
 :root {
-  color-scheme: dark;
-  /* macOS 风格设计令牌 */
+  color-scheme: light;
+  /* GitHub Primer 风格设计令牌 */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
   --titlebar-h: 44px;
-  /* 动效曲线 */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
-  --dur-fast: 0.15s;
-  --dur-med: 0.25s;
-  --dur-slow: 0.4s;
-  --glass-blur: blur(20px) saturate(180%);
+  /* 动效曲线（GitHub：80ms hover / 200ms 菜单展开，无装饰动效） */
+  --ease-out: ease-out;
+  --dur-fast: 0.08s;
+  --dur-med: 0.2s;
 }
 
-/* 深色主题（默认） */
-:root[data-theme="dark"] {
-  --bg: #1e1e1e;
-  --bg-elevated: #232326;
-  --pane-border: rgba(128, 128, 128, 0.14);
-  --fg: #d4d4d4;
-  --sidebar-bg: rgba(37, 37, 41, 0.72);
-  --sidebar-border: rgba(255, 255, 255, 0.07);
-  --sidebar-hover: rgba(255, 255, 255, 0.06);
-  --sidebar-active: #094771;
-  --sidebar-active-fg: #fff;
-  --accent: #9ecbff;
-  --hover: #2a2d2e;
-  --border: rgba(51, 51, 51, 0.6);
-  --tool-btn-fg: #d4d4d4;
-  --muted: #888;
-  --error-bg: rgba(76, 29, 36, 0.85);
-  --error-fg: #ffb4b4;
-  --error-border: #7f2a35;
-  --badge-added-bg: #1b3a23;
-  --badge-added-fg: #6fce89;
-  --badge-removed-bg: #3a1b1b;
-  --badge-removed-fg: #e8836a;
-  --badge-modified-bg: #3a2f1b;
-  --badge-modified-fg: #e0c56a;
-  --table-header-bg: #1e1e1e;
-  --btn-bg: rgba(45, 45, 48, 0.8);
-  --btn-bg-hover: #3c3c41;
-  --btn-fg: #d4d4d4;
-  --btn-border: rgba(70, 70, 70, 0.6);
-  --btn-primary-bg: #0e639c;
-  --btn-primary-bg-hover: #1177bb;
-  --btn-primary-fg: #fff;
-  --btn-danger-bg: transparent;
-  --btn-danger-bg-hover: rgba(244, 135, 113, 0.15);
-  --btn-danger-fg: #f48771;
-  /* 分层阴影 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
-}
-
-/* 浅色主题 */
+/* 浅色主题（默认，GitHub Primer light） */
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f6f6f8;
-  --bg-elevated: #fafafc;
-  --pane-border: rgba(128, 128, 128, 0.18);
+  --bg: #ffffff;
+  --bg-elevated: #f6f8fa;
+  --pane-border: #d0d7de;
   --fg: #1f2328;
-  --sidebar-bg: rgba(246, 246, 248, 0.75);
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-hover: rgba(0, 0, 0, 0.05);
-  --sidebar-active: #cfe3ff;
-  --sidebar-active-fg: #0b4f8a;
-  --accent: #0b5cad;
-  --hover: #e8eaed;
-  --border: rgba(212, 212, 212, 0.7);
+  --sidebar-bg: #f6f8fa;
+  --sidebar-border: #d0d7de;
+  --sidebar-hover: #eaeef2;
+  --sidebar-active: #ddf4ff;
+  --sidebar-active-fg: #0969da;
+  --accent: #0969da;
+  --hover: #f3f4f6;
+  --border: #d0d7de;
   --tool-btn-fg: #1f2328;
-  --muted: #6b7280;
-  --error-bg: rgba(253, 232, 236, 0.9);
-  --error-fg: #b4232f;
-  --error-border: #f5c0c7;
-  --badge-added-bg: #dcfce7;
-  --badge-added-fg: #15803d;
-  --badge-removed-bg: #fee2e2;
-  --badge-removed-fg: #b91c1c;
-  --badge-modified-bg: #fef3c7;
-  --badge-modified-fg: #b45309;
-  --table-header-bg: #f6f6f8;
-  --btn-bg: rgba(255, 255, 255, 0.85);
-  --btn-bg-hover: #f0f1f3;
+  --muted: #656d76;
+  --error-bg: #ffebe9;
+  --error-fg: #cf222e;
+  --error-border: rgba(207, 34, 46, 0.5);
+  --badge-added-bg: #dafbe1;
+  --badge-added-fg: #1a7f37;
+  --badge-removed-bg: #ffebe9;
+  --badge-removed-fg: #cf222e;
+  --badge-modified-bg: #fff8c5;
+  --badge-modified-fg: #9a6700;
+  --table-header-bg: #f6f8fa;
+  --btn-bg: #f6f8fa;
+  --btn-bg-hover: #f3f4f6;
   --btn-fg: #1f2328;
-  --btn-border: rgba(190, 190, 195, 0.8);
-  --btn-primary-bg: #0b5cad;
-  --btn-primary-bg-hover: #094e94;
+  --btn-border: #d0d7de;
+  --btn-primary-bg: #0969da;
+  --btn-primary-bg-hover: #0550ae;
   --btn-primary-fg: #fff;
-  --btn-danger-bg: transparent;
-  --btn-danger-bg-hover: rgba(180, 35, 47, 0.08);
-  --btn-danger-fg: #b4232f;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.16);
+  --btn-danger-bg: #ffffff;
+  --btn-danger-bg-hover: #a40e26;
+  --btn-danger-fg: #cf222e;
+  /* 发丝阴影：GitHub 以边框为主，阴影仅作浮层提示 */
+  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-md: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
+}
+
+/* 深色主题（GitHub Primer dark） */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --bg-elevated: #161b22;
+  --pane-border: #30363d;
+  --fg: #e6edf3;
+  --sidebar-bg: #161b22;
+  --sidebar-border: #30363d;
+  --sidebar-hover: #21262d;
+  --sidebar-active: rgba(56, 139, 253, 0.15);
+  --sidebar-active-fg: #58a6ff;
+  --accent: #58a6ff;
+  --hover: #21262d;
+  --border: #30363d;
+  --tool-btn-fg: #e6edf3;
+  --muted: #7d8590;
+  --error-bg: rgba(248, 81, 73, 0.15);
+  --error-fg: #f85149;
+  --error-border: rgba(248, 81, 73, 0.5);
+  --badge-added-bg: rgba(46, 160, 67, 0.15);
+  --badge-added-fg: #3fb950;
+  --badge-removed-bg: rgba(248, 81, 73, 0.15);
+  --badge-removed-fg: #f85149;
+  --badge-modified-bg: rgba(187, 128, 9, 0.15);
+  --badge-modified-fg: #d29922;
+  --table-header-bg: #161b22;
+  --btn-bg: #21262d;
+  --btn-bg-hover: #30363d;
+  --btn-fg: #e6edf3;
+  --btn-border: rgba(240, 246, 252, 0.1);
+  --btn-primary-bg: #1f6feb;
+  --btn-primary-bg-hover: #388bfd;
+  --btn-primary-fg: #fff;
+  --btn-danger-bg: #21262d;
+  --btn-danger-bg-hover: #da3633;
+  --btn-danger-fg: #f85149;
+  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.8);
+  --shadow-md: 0 3px 6px rgba(1, 4, 9, 0.4);
+  --shadow-lg: 0 8px 24px rgba(1, 4, 9, 0.6);
 }
 
 html,
@@ -106,7 +104,17 @@ body,
   overflow: hidden;
   background: var(--bg);
   color: var(--fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* GitHub 字体栈：系统 UI + 等宽代码字体，不加载任何 webfont */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 .app-shell {
@@ -123,18 +131,18 @@ body,
   display: flex;
   align-items: center;
   padding: 0 0 0 16px;
-  background: transparent;
+  background: var(--bg-elevated);
   user-select: none;
   -webkit-user-select: none;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--border);
 }
 
 .titlebar-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--fg);
   padding-left: 70px; /* 避开红绿灯 */
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
 }
 
 .app-body {
@@ -145,17 +153,16 @@ body,
 }
 
 .sidebar {
-  width: 180px;
+  width: 296px;
   flex-shrink: 0;
   background: var(--sidebar-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border-right: 1px solid var(--sidebar-border);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .tool-btn {
@@ -163,26 +170,19 @@ body,
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: none;
   background: transparent;
   color: var(--tool-btn-fg);
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .tool-btn:hover {
   background: var(--sidebar-hover);
-}
-
-.tool-btn:active {
-  transform: scale(0.97);
 }
 
 .tool-btn:focus-visible {
@@ -193,30 +193,7 @@ body,
 .tool-btn.active {
   background: var(--sidebar-active);
   color: var(--sidebar-active-fg);
-}
-
-/* 激活项左侧滑入指示条 */
-.tool-btn.active::before {
-  content: "";
-  position: absolute;
-  left: -8px;
-  top: 20%;
-  bottom: 20%;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--accent);
-  animation: indicator-in var(--dur-med) var(--ease-out);
-}
-
-@keyframes indicator-in {
-  from {
-    transform: scaleY(0);
-    opacity: 0;
-  }
-  to {
-    transform: scaleY(1);
-    opacity: 1;
-  }
+  font-weight: 600;
 }
 
 .tool-icon {
@@ -226,11 +203,6 @@ body,
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform var(--dur-med) var(--ease-spring);
-}
-
-.tool-btn:hover .tool-icon {
-  transform: scale(1.12);
 }
 
 .work-area {
@@ -250,7 +222,7 @@ body,
   flex-direction: column;
 }
 
-/* 交叉渐隐舞台：新旧工具分层叠放 */
+/* 工具舞台：单层渲染当前工具，切换瞬时生效 */
 .tool-stage {
   position: relative;
   flex: 1;
@@ -267,47 +239,15 @@ body,
   min-width: 0;
 }
 
-.tool-layer-enter {
-  animation: tool-enter var(--dur-slow) var(--ease-out) both;
-}
-
-.tool-layer-exit {
-  pointer-events: none;
-  animation: tool-exit 0.22s ease-in both;
-}
-
-@keyframes tool-enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.995);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes tool-exit {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.995);
-  }
-}
-
 .sidebar .spacer {
   flex: 1;
 }
 
-/* 命令面板（类 Spotlight） */
+/* 命令面板（类 Spotlight，GitHub 风格实色浮层） */
 .cmd-palette-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   padding-top: 15vh;
@@ -327,38 +267,35 @@ body,
 .cmd-palette {
   width: 420px;
   max-height: 340px;
-  background: var(--sidebar-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--sidebar-border);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transform-origin: top center;
-  animation: palette-in var(--dur-slow) var(--ease-out) both;
+  animation: palette-in var(--dur-med) var(--ease-out) both;
 }
 
 @keyframes palette-in {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(-8px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0);
   }
 }
 
 .cmd-palette-input {
   border: none;
-  background: transparent;
+  background: var(--bg-elevated);
   color: var(--fg);
   font-size: 14px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   outline: none;
-  border-bottom: 1px solid var(--sidebar-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .cmd-palette-input::placeholder {
@@ -367,7 +304,7 @@ body,
 
 .cmd-palette-empty {
   padding: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   text-align: center;
 }
@@ -386,18 +323,15 @@ body,
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 9px 12px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   color: var(--tool-btn-fg);
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .cmd-palette-item:hover,
@@ -406,24 +340,15 @@ body,
   color: var(--sidebar-active-fg);
 }
 
-.cmd-palette-item.active {
-  transform: translateX(3px);
-}
-
 /* 尊重系统减少动态效果偏好 */
 @media (prefers-reduced-motion: reduce) {
-  .tool-layer-enter,
-  .tool-layer-exit,
   .cmd-palette-overlay,
-  .cmd-palette,
-  .tool-btn.active::before {
+  .cmd-palette {
     animation: none;
   }
 
   .tool-btn,
-  .tool-btn:hover .tool-icon,
-  .cmd-palette-item,
-  .cmd-palette-item.active {
+  .cmd-palette-item {
     transition: none;
   }
 }

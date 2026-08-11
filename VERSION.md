@@ -3,6 +3,17 @@
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 
+## v1.0.8 — 2026-08-11
+
+**重构 UI 为 GitHub Primer 风格**（依据 `skills/dev-tools-design/DESIGN.md`，分支 `refactor/github-primer-ui`）
+
+- **设计令牌整体重映射**：`src/App.css` 保留全部变量名（`--bg`/`--accent`/`--btn-primary-bg`/`--sidebar-active` 等），仅重赋值——浅色改用 Primer light（`#ffffff` 画布、`#f6f8fa` 副面、`#d0d7de` 发丝边框、`#0969da` 蓝、`#1a7f37` 绿），深色改用 Primer dark（`#0d1117`/`#161b22`/`#30363d`/`#58a6ff`）；所有消费 `var()` 的 CSS 与工具组件自动继承
+- **默认主题浅色化**：`src/store/app.ts` 的 `readTheme()` 回落从 dark 改 light，`index.html` 首帧兜底 `#1e1e1e`→`#ffffff`
+- **侧栏 296px 实色化**：`width: 180px→296px`，去掉 `backdrop-filter` 玻璃模糊，激活项改为「`--sidebar-active` 底 + `--sidebar-active-fg` 字」的 GitHub 风格，删除左侧滑入指示条
+- **动效收敛**：删除 `--ease-spring`/`--dur-slow`/`--glass-blur` 令牌与 `tool-enter`/`tool-exit`/`indicator-in`/`item-in`/`error-in` 动画；hover 80ms、菜单展开 200ms；`src/App.tsx` 移除交叉渐隐的 `ExitSlot` 退场逻辑，工具切换瞬时生效
+- **组件对齐**：按钮体系改 GitHub 规范（主按钮蓝 `#0969da`、danger 悬停红底白字、去 scale 按下动效）；`.pane` 白底 + `.pane-title` 顶部 `#f6f8fa` 色带头；输入框 focus 环 `0 0 0 3px rgba(9,105,218,0.3)`；`.regex-match` 与 RegexTester overviewRuler 绿改为主题感知（`#1a7f37`/`#3fb950`）
+- **字号**：正文 13px→14px，重量仅 400/600
+
 ## v1.0.7 — 2026-08-11
 
 **新增**

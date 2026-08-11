@@ -83,7 +83,7 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 - 每个工具组件内 `useSaveDraft(toolId, {...})` 保存草稿、启动时从 `drafts[toolId]` 恢复
 - 版本号同步维护三处：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`
 - 允许的文件拖拽由 `useFileDrop` 自实现计数方案（Monaco 关了 dropIntoEditor），勿回退到 Monaco 原生拖拽
-- 主题在 `src/store/app.ts` 模块加载时即写 `documentElement.dataset.theme`（防 FOUC），`index.html` 有深色首帧兜底
+- 主题在 `src/store/app.ts` 模块加载时即写 `documentElement.dataset.theme`（防 FOUC），`index.html` 有首帧兜底（默认浅色）。**UI 采用 GitHub Primer 风格**（见 `skills/dev-tools-design/DESIGN.md`）：浅色默认 `#ffffff`/`#f6f8fa`/`#d0d7de`/`#0969da`，深色 `#0d1117`/`#161b22`/`#30363d`；正文 14px、仅 400/600 字重；动效仅 hover 80ms 与菜单 200ms，不添加装饰性动画；改样式优先在 `src/App.css` 的 `:root` 令牌块重赋值，保持变量名不变
 - `data-hotkey="run"` / `data-hotkey="copy"` 按钮由 `useKeyboardShortcuts` 驱动（`Cmd+Enter`/`Cmd+Shift+C`），新工具加主操作按钮时打对应标记
 - **Tauri 能力权限**：依赖窗口/系统能力的隐藏实现（窗口拖拽、最小化等）须在 `src-tauri/capabilities/default.json` 显式声明 `core:window:allow-*`，否则静默失效（拖拽 bug 的根因）。排查顺序：权限 → 配置 → 代码
 - **macOS 标题栏**：保持默认 `decorations`（勿设 `false`，否则红绿灯消失）+ `titleBarStyle: Overlay` + `trafficLightPosition`；窗口拖拽用 `data-tauri-drag-region` + 上面权限
