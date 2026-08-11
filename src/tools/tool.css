@@ -207,6 +207,9 @@
 }
 
 .pane-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--fg);
@@ -215,6 +218,10 @@
   padding: 6px 12px;
   border-bottom: 1px solid var(--pane-border);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.pane-title > .spacer {
+  flex: 1;
 }
 
 .hint {
@@ -562,6 +569,22 @@
   background: var(--surface);
   cursor: grab;
   transition: transform 0.2s var(--ease-out);
+}
+
+/* 设置页顶部偏好项（JSON 预览开关） */
+.settings-pref {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--fg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.settings-pref .switch {
+  flex-shrink: 0;
 }
 
 .settings-item:not(:has(> .drag-handle)) {

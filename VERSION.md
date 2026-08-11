@@ -6,6 +6,16 @@
 
 ## Unreleased
 
+**JSON 编辑器交互增强**（悬停预览/点击复制/折叠控制，codicon 字体修复）
+
+- `src/monaco-setup.ts` 修复 codicon 字体缺失：`@font-face` 只在 `editor.main` 链式引入，本项目用 `editor.api` 到不了，折叠箭头/展开按钮等 codicon 图标一直空字形；显式 import `codicon.css` 补上（产出 `dist/assets/codicon-*.ttf`）
+- JSON key/value 分色：Monarch tokenizer 加 lookahead 规则识别对象 key（`"(?:[^"\\]|\\.)*"(?=\s*:)`），双主题各加 `key` 配色（浅 `#0969da` / 深 `#79c0ff`）
+- 悬停预览（json-handle 式）：`src/utils/jsonHover.ts` 单遍扫描器记录每个对象 key 区间（含嵌套/数组/转义），`monaco.languages.registerHoverProvider` 悬停 key/value 区间浮层展示 pretty 值；`WeakMap` 按 model+versionId 缓存，大 JSON 不卡
+- 点击复制：`monaco.editor.onDidCreateEditor` + `onMouseDown`，只读编辑器（输出侧）点击 key/value 区间即复制该值，Toast 提示；可编辑输入框不受影响
+- 设置页新增「悬停预览 JSON 值」开关（`src/store/app.ts` 加 `jsonPreview`，持久化 `devbox-json-preview`），关闭时 hover 与点击复制均停用
+- JSON 格式化输出 pane 标题栏新增「全部闭合/全部展开」按钮（`editor.foldAll`/`editor.unfoldAll`），`JsonOutput` 透传 `editorRef`；`.pane-title` 改 flex 支持右侧按钮
+- 坑：`jsonHover.ts` DEV 自检断言 `findKeyAt(spans, 0)` 期望命中首个 key，但偏移 0 是 `{` 不在任何 key 区间，DEV 模式抛错导致白屏；改为断言 `keyA.keyStart`
+
 ## v1.0.10 — 2026-08-11
 
 **编码转换工具改为 base64.us 格局**（参考 https://base64.us/ 的纵向流布局，UI 沿用 Meta (Store) 风格）
