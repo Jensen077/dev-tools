@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Dialog } from "@base-ui/react/dialog";
 import { TOOLS } from "../tools";
 import { useAppStore } from "../store/app";
 import { useSettingsStore } from "../store/settings";
@@ -60,7 +61,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         }
         case "Enter": {
           e.preventDefault();
-          if (filtered[selectedIdx]) select(filtered[selectedIdx].id);
+          const item = filtered[selectedIdx];
+          if (item) select(item.id);
           break;
         }
       }
@@ -69,45 +71,49 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [open, filtered, selectedIdx, select]);
 
-  if (!open) return null;
-
   return (
-    <div className="cmd-palette-overlay" onMouseDown={onClose}>
-      <div className="cmd-palette" onMouseDown={(e) => e.stopPropagation()}>
-        <input
-          ref={inputRef}
-          className="cmd-palette-input"
-          type="text"
-          placeholder="搜索工具..."
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setSelectedIdx(0);
-          }}
-        />
-        {filtered.length === 0 ? (
-          <div className="cmd-palette-empty">无匹配工具</div>
-        ) : (
-          <div className="cmd-palette-list">
-            {filtered.map((t, i) => (
-              <button
-                key={t.id}
-                className={`cmd-palette-item${i === selectedIdx ? " active" : ""}`}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  select(t.id);
-                }}
-                onMouseEnter={() => setSelectedIdx(i)}
-              >
-                <span className="tool-icon">
-                  <ToolIcon name={t.id} />
-                </span>
-                <span>{t.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <Dialog.Root open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="cmd-palette-overlay" />
+        <Dialog.Viewport className="cmd-palette-viewport">
+          <Dialog.Popup className="cmd-palette">
+            <Dialog.Title className="visually-hidden">命令面板</Dialog.Title>
+            <input
+              ref={inputRef}
+              className="cmd-palette-input"
+              type="text"
+              placeholder="搜索工具..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSelectedIdx(0);
+              }}
+            />
+            {filtered.length === 0 ? (
+              <div className="cmd-palette-empty">无匹配工具</div>
+            ) : (
+              <div className="cmd-palette-list">
+                {filtered.map((t, i) => (
+                  <button
+                    key={t.id}
+                    className={`cmd-palette-item${i === selectedIdx ? " active" : ""}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      select(t.id);
+                    }}
+                    onMouseEnter={() => setSelectedIdx(i)}
+                  >
+                    <span className="tool-icon">
+                      <ToolIcon name={t.id} />
+                    </span>
+                    <span>{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Dialog.Popup>
+        </Dialog.Viewport>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

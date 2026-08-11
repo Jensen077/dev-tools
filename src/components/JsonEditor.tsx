@@ -6,7 +6,7 @@ import type { ParseError } from "../types";
 
 export const editorOptions: editor.IStandaloneEditorConstructionOptions = {
   minimap: { enabled: false },
-  fontSize: 13,
+  fontSize: 14,
   scrollBeyondLastLine: false,
   wordWrap: "on",
   renderWhitespace: "none",
@@ -91,7 +91,7 @@ export function JsonEditor({
     <Editor
       height={height}
       language={language}
-      theme={theme === "dark" ? "vs-dark" : "light"}
+      theme={theme === "dark" ? "devbox-dark" : "devbox-light"}
       defaultValue={value}
       onChange={(v) => {
         const next = v ?? "";

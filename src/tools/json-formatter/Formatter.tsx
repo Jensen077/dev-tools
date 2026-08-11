@@ -138,15 +138,19 @@ export function Formatter() {
         </button>
         <button className="btn" onClick={() => run("minify")}>压缩</button>
         <button className="btn" onClick={handleUnescape}>去转义</button>
-        <label>
-          缩进
-          <select value={indent} onChange={(e) => setIndent(Number(e.target.value))}>
-            <option value={2}>2</option>
-            <option value={4}>4</option>
-          </select>
-        </label>
-        <label>
-          <input type="checkbox" checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)} />
+        <span className="seg-wrap">
+          <span className="seg-label">缩进</span>
+          <span className="seg">
+            <button type="button" className={`seg-btn${indent === 2 ? " on" : ""}`} onClick={() => setIndent(2)}>
+              2
+            </button>
+            <button type="button" className={`seg-btn${indent === 4 ? " on" : ""}`} onClick={() => setIndent(4)}>
+              4
+            </button>
+          </span>
+        </span>
+        <label className="switch-label">
+          <input type="checkbox" className="switch" checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)} />
           自动格式化
         </label>
         <button className="btn" data-hotkey="copy" onClick={copyResult} disabled={!output}>

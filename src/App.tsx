@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 import { TOOLS } from "./tools";
 import { Settings } from "./tools/settings/Settings";
@@ -13,18 +13,11 @@ import "./App.css";
 
 const SETTINGS_ID = "settings";
 
-/** 退场中的旧工具（交叉渐隐），保留其组件实例渲染到最后 */
-interface ExitSlot {
-  key: string;
-  Comp: ComponentType | null;
-}
-
 export default function App() {
   const activeTool = useAppStore((s) => s.activeTool);
   const setActiveTool = useAppStore((s) => s.setActiveTool);
   const toolOrder = useSettingsStore((s) => s.order);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [exiting, setExiting] = useState<ExitSlot | null>(null);
 
   useKeyboardShortcuts(setCmdOpen);
 
@@ -46,23 +39,6 @@ export default function App() {
   const currentKey = isSettings ? SETTINGS_ID : active?.id ?? "";
   const CurrentComp = isSettings ? (Settings as ComponentType) : (active?.component ?? null);
 
-  // 上一帧渲染的工具，供切换时放入退场槽
-  const lastKeyRef = useRef<string | null>(null);
-  const lastCompRef = useRef<ComponentType | null>(null);
-
-  if (lastKeyRef.current !== null && lastKeyRef.current !== currentKey && !exiting) {
-    setExiting({ key: lastKeyRef.current, Comp: lastCompRef.current });
-  }
-  lastKeyRef.current = currentKey;
-  lastCompRef.current = CurrentComp;
-
-  // 退场动画结束后清除退场槽
-  useEffect(() => {
-    if (!exiting) return;
-    const t = setTimeout(() => setExiting(null), 260);
-    return () => clearTimeout(t);
-  }, [exiting]);
-
   return (
     <div className="app-shell">
       <header className="titlebar" data-tauri-drag-region>
@@ -71,21 +47,12 @@ export default function App() {
         </div>
       </header>
       <div className="app-body">
-        <Sidebar isSettings={isSettings} onSelect={setActiveTool} />
+        <Sidebar isSettings={isSettings} onSelect={setActiveTool} onSearch={() => setCmdOpen(true)} />
         <main className="work-area">
           <div className="tool-slot">
             <div className="tool-stage">
-              {exiting && (
-                <div className="tool-layer tool-layer-exit" key={`exit-${exiting.key}`}>
-                  <ErrorBoundary>
-                    {exiting.Comp && <exiting.Comp key={exiting.key} />}
-                  </ErrorBoundary>
-                </div>
-              )}
-              <div className="tool-layer tool-layer-enter" key={`enter-${currentKey}`}>
-                <ErrorBoundary>
-                  {CurrentComp && <CurrentComp key={currentKey} />}
-                </ErrorBoundary>
+              <div className="tool-layer">
+                <ErrorBoundary>{CurrentComp && <CurrentComp key={currentKey} />}</ErrorBoundary>
               </div>
             </div>
           </div>

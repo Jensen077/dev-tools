@@ -17,12 +17,12 @@ interface AppState {
 
 const THEME_KEY = "devbox-theme";
 
-/** 读取持久化主题，非法值/异常一律回落 dark，避免存储不可用导致白屏 */
+/** 读取持久化主题，非法值/异常一律回落 light（Meta 白色画布优先） */
 function readTheme(): Theme {
   try {
-    return localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
