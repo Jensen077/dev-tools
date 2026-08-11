@@ -1,6 +1,9 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
 import "monaco-editor/esm/vs/languages/definitions/shell/register.js";
+// codicon 字体的 @font-face 只在 editor.main 链式引入，editor.api 到不了；
+// 缺了它折叠箭头/展开按钮等 codicon 图标全渲染为空字形，这里显式补上
+import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker.js?worker";
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker.js?worker";
 import { loader } from "@monaco-editor/react";
@@ -21,6 +24,8 @@ const JSON_TOKENIZER: monaco.languages.IMonarchLanguage = {
     root: [
       [/\/\*/, "comment", "@commentBlock"],
       [/\/\/.*$/, "comment"],
+      // 字符串后跟冒号（可含转义）即对象 key，先于通用字符串规则匹配，独立配色
+      [/"(?:[^"\\]|\\.)*"(?=\s*:)/, "key"],
       [/"/, "string", "@string"],
       [/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/, "number"],
       [/\b(true|false|null)\b/, "keyword"],
@@ -74,6 +79,7 @@ monaco.editor.defineTheme("devbox-light", {
   inherit: true,
   rules: [
     { token: "string", foreground: "0a3069" },
+    { token: "key", foreground: "0969da" },
     { token: "string.escape", foreground: "8250df" },
     { token: "keyword", foreground: "cf222e" },
     { token: "number", foreground: "0550ae" },
@@ -112,6 +118,7 @@ monaco.editor.defineTheme("devbox-dark", {
   inherit: true,
   rules: [
     { token: "string", foreground: "a5d6ff" },
+    { token: "key", foreground: "79c0ff" },
     { token: "string.escape", foreground: "d2a8ff" },
     { token: "keyword", foreground: "ff7b72" },
     { token: "number", foreground: "79c0ff" },
