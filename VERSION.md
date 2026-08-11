@@ -3,6 +3,17 @@
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 
+## v1.0.9 — 2026-08-11
+
+**UI 视觉语言切换为 Meta (Store) 风格**（自 v1.0.8 的 GitHub Primer；设计契约见 `skills/dev-tools-design/DESIGN.md`）
+
+- **设计令牌重映射**：`src/App.css` 保留全部变量名仅重赋值——浅色改白色画布 `#ffffff` + 暖灰副面 `#f1f4f7` + Meta Blue `#0064E0`，深色改近黑 `#181a1b` + 亮蓝 CTA `#47A5FA`；语义色/徽标/圆角（8/20/24/100）/阴影（浮层双阴影）同步切换；默认主题回浅色
+- **组件库引入 Base UI**（`@base-ui/react`）：历史下拉与表格字段选择 → Popover，命令面板 → Dialog（获得焦点陷阱 / Esc 关闭 / 遮罩点击关闭），删去手写外部点击关闭逻辑
+- **代码框配色**：Monaco 主题（`src/monaco-setup.ts`）改为 GitHub 默认（浅/深），diff 增删行同 GitHub 红绿
+- **组件打磨**：按钮胶囊化 + Meta Blue 主按钮（hover 变深 + scale）；侧边栏扁平通栏 + 激活 Baby Blue 左条；搜索框去边框色块化；全局字号收敛 11/12/13/14 阶梯（去除 12.5/13.5 碎刻度）；JSON 缩进改分段控件；开关放大 38×23；正则旗标改胶囊
+- **设计稿对齐**：`devbox-style-prototype.html` 同步为同一 Meta 体系（Open Design 设计文件区）
+- **设计契约化**：重写 `skills/dev-tools-design/DESIGN.md` 为当前 Meta Store 风格契约，后续 UI 迭代遵循该文件
+
 ## v1.0.8 — 2026-08-11
 
 **重构 UI 为 GitHub Primer 风格**（依据 `skills/dev-tools-design/DESIGN.md`，分支 `refactor/github-primer-ui`）

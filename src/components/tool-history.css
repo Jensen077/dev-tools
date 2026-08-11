@@ -1,35 +1,27 @@
-/* ToolHistory 下拉组件样式（颜色沿用 App.css 主题变量） */
-
-.tool-history {
-  position: relative;
-  display: inline-flex;
-}
+/* ToolHistory 下拉组件样式（Base UI Popover 定位，此处仅保留视觉样式） */
 
 .tool-history-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .tool-history-count {
   background: var(--accent);
-  color: #fff;
-  border-radius: 8px;
-  padding: 0 6px;
+  color: var(--btn-primary-fg);
+  border-radius: var(--radius-pill);
+  padding: 0 7px;
   font-size: 11px;
   line-height: 16px;
+  font-variant-numeric: tabular-nums;
 }
 
 .tool-history-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 50;
   width: 320px;
   max-height: 360px;
   overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: 6px;
@@ -67,7 +59,7 @@
 
 .tool-history-search:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  box-shadow: var(--focus-ring);
 }
 
 .tool-history-empty {
@@ -78,13 +70,17 @@
 }
 
 .tool-history-item {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.tool-history-item:hover {
+  background: var(--surface-1);
 }
 
 .tool-history-head {
@@ -95,7 +91,7 @@
 
 .tool-history-preview {
   font-size: 12px;
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
   color: var(--tool-btn-fg);
   overflow: hidden;
   text-overflow: ellipsis;

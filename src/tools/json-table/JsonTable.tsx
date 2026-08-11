@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
+import { Popover } from "@base-ui/react/popover";
 import { isDesktop } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { useAppStore } from "../../store/app";
@@ -167,24 +168,11 @@ export function JsonTable() {
   const [dragField, setDragField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stepRef = useRef(28);
   const dragFieldRef = useRef<string | null>(null);
   const addHistory = useHistoryStore((s) => s.addHistory);
   const showToast = useToastStore((s) => s.showToast);
-
-  // 点击弹出层外部时关闭字段选择器
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setPickerOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [pickerOpen]);
 
   // 历史「加载」回填输入
   useApplyHistory("json-table", ({ input }) => setInput(input ?? ""));
@@ -427,43 +415,45 @@ export function JsonTable() {
             {filteredRows ? (
               <>
                 <div className="pane-title">
-                  <div className="field-picker" ref={pickerRef}>
-                    <button className="btn btn-sm" onClick={() => setPickerOpen((v) => !v)}>
+                  <Popover.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+                    <Popover.Trigger className="btn btn-sm">
                       选择字段 <span className="btn-hotkey">{selected.size}/{headers.length}</span>
-                    </button>
-                    {pickerOpen && (
-                      <div className="field-picker-pop">
-                        <div className="field-picker-actions">
-                          <button className="btn btn-sm" onClick={selectAll}>全选</button>
-                          <button className="btn btn-sm" onClick={selectNone}>清空</button>
-                          <span className="spacer" />
-                          <button className="btn btn-sm btn-primary" onClick={() => setPickerOpen(false)}>完成</button>
-                        </div>
-                        <div className="field-picker-list" ref={listRef}>
-                          {headers.map((h) => (
-                            <div
-                              key={h}
-                              className={`field-picker-item${dragField === h ? " dragging" : ""}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selected.has(h)}
-                                onChange={() => toggleField(h)}
-                              />
-                              <span className="field-picker-name">{h}</span>
-                              <span
-                                className="field-picker-drag"
-                                title="拖拽排序"
-                                onMouseDown={(e) => dragStart(e, h)}
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Positioner className="pop-positioner" side="bottom" align="start" sideOffset={6}>
+                        <Popover.Popup className="field-picker-pop">
+                          <div className="field-picker-actions">
+                            <button className="btn btn-sm" onClick={selectAll}>全选</button>
+                            <button className="btn btn-sm" onClick={selectNone}>清空</button>
+                            <span className="spacer" />
+                            <Popover.Close className="btn btn-sm btn-primary">完成</Popover.Close>
+                          </div>
+                          <div className="field-picker-list" ref={listRef}>
+                            {headers.map((h) => (
+                              <div
+                                key={h}
+                                className={`field-picker-item${dragField === h ? " dragging" : ""}`}
                               >
-                                ⋮⋮
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                                <input
+                                  type="checkbox"
+                                  checked={selected.has(h)}
+                                  onChange={() => toggleField(h)}
+                                />
+                                <span className="field-picker-name">{h}</span>
+                                <span
+                                  className="field-picker-drag"
+                                  title="拖拽排序"
+                                  onMouseDown={(e) => dragStart(e, h)}
+                                >
+                                  ⋮⋮
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </Popover.Popup>
+                      </Popover.Positioner>
+                    </Popover.Portal>
+                  </Popover.Root>
                 </div>
                 <div className="table-wrap">
                   <table className="data-table">

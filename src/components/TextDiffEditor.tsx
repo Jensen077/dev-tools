@@ -32,13 +32,13 @@ export function TextDiffEditor({
     <DiffEditor
       height={height}
       language={language}
-      theme={theme === "dark" ? "vs-dark" : "light"}
+      theme={theme === "dark" ? "devbox-dark" : "devbox-light"}
       original={original}
       modified={modified}
       onMount={handleMount}
       options={{
         minimap: { enabled: false },
-        fontSize: 13,
+        fontSize: 14,
         scrollBeyondLastLine: false,
         wordWrap: "on",
         readOnly: true,

@@ -1,4 +1,4 @@
-/* 全局 Toast 容器样式（颜色沿用 App.css 主题变量） */
+/* 全局 Toast 容器样式（现代极简：深色胶囊浮层） */
 
 .toast-container {
   position: fixed;
@@ -16,13 +16,13 @@
   align-items: center;
   gap: 8px;
   max-width: 320px;
-  padding: 9px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  box-shadow: var(--shadow-md);
-  color: var(--fg);
-  font-size: 14px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: #1c2b33;
+  color: #ffffff;
+  box-shadow: var(--shadow-lg);
+  font-size: 12.5px;
   cursor: pointer;
   text-align: left;
   animation: toast-in var(--dur-med) var(--ease-out);
@@ -30,19 +30,19 @@
 
 .toast-icon {
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .toast-success .toast-icon {
-  color: var(--badge-added-fg);
+  color: #57c06f;
 }
 
 .toast-error .toast-icon {
-  color: var(--badge-removed-fg);
+  color: #f66f7e;
 }
 
 .toast-info .toast-icon {
-  color: var(--accent);
+  color: #47a5fa;
 }
 
 @keyframes toast-in {

@@ -1,161 +1,107 @@
-# Design System Inspired by GitHub
+# Design System Inspired by Meta (Store) — devbox
 
-> Category: Developer Tools
-> Code-forward platform. Functional density, blue-on-white precision, Primer foundations.
+> Category: Developer Tools × E-Commerce/Retail
+> 白色画布 + 暖灰表面 + Meta Blue 胶囊 CTA + Optimistic 字体回退；代码区用 GitHub 默认主题。
+> 本文件是仓库内设计契约，后续 UI 迭代一律遵循。
 
 ## 1. Visual Theme & Atmosphere
 
-GitHub's surface is engineered, not decorated. Every pixel announces a stance: this is a tool for people who care about diffs, builds, and pull requests. The page background is a clean `#ffffff` (light) or `#0d1117` (dark), with content arranged on dense rectangular panes separated by hairline borders rather than negative space. Information density is the brand — list rows, code lines, repository headers, and notification cards are all packed close together so a power user can scan a hundred items without scrolling.
+devbox 把 Meta 零售设计系统的「画廊式」克制感应用到开发者工具箱：纯白画布承载高密度信息，暖灰（Soft Gray `#f1f4f7`）做副面分层，Meta Blue `#0064E0` 是唯一交互强调色。扁平优先——表面靠颜色阶梯区分（白 → 暖灰 → 浅灰），阴影只出现在下拉/弹层浮层（双阴影：`0 12px 28px + 0 2px 4px`）。深色主题为 Meta 沉浸式近黑 `#181a1b` + 亮蓝 CTA `#47A5FA`。
 
-The signature accents are the **Primer blue** (`#0969da`) for links and primary actions, and **GitHub green** (`#1a7f37`) for merged states, success, and the merge button itself. Both feel slightly muted compared to consumer-product blues and greens — saturated enough to read against the dense gray text, restrained enough to disappear into the background when several appear in one viewport.
-
-Typography uses the **system-ui** stack across the entire product so text renders crisply on every OS, paired with **SFMono / Menlo / Consolas** for code. There is no editorial display font; GitHub's voice is the voice of the system you're already on.
+代码区不套 UI 色，独立用 **GitHub 默认主题**（浅/深），diff 增删行同 GitHub 红绿——工具型应用里「编辑区 = 编辑器配色」是刻意的身份切换。
 
 **Key Characteristics:**
-- True white canvas (`#ffffff`) or deep navy-black (`#0d1117`) — no warmth, no tint
-- Hairline gray borders (`#d0d7de`) define every pane and panel
-- Primer blue (`#0969da`) for links/primary; GitHub green (`#1a7f37`) for success/merge
-- system-ui for prose; SFMono for code — no custom typeface
-- Dense list rows with minimal padding; whitespace is rare
-- Octicon iconography at 16px / 24px — single-stroke, geometric, consistent
-- Pill-shaped status badges with strong color semantics
+- 纯白画布 + 暖灰副面 + 发丝边框，扁平分层优先
+- Meta Blue 胶囊 CTA（100px 圆角），单一强调色
+- Optimistic VF 回退字体栈（Inter/Montserrat/Helvetica）
+- 字号阶梯收敛为 11/12/13/14，无碎刻度
+- 圆角阶梯 8（输入）/ 20（面板）/ 24（浮层）/ 100（胶囊）
+- 侧边栏通栏扁平行，激活项 Baby Blue `#e8f3ff` + 3px 蓝左条
+- 代码区 GitHub 默认配色，与 UI 主题解耦
 
 ## 2. Color Palette & Roles
 
-### Primary
-- **Canvas Default** (`#ffffff`): Primary page background, light theme.
-- **Canvas Subtle** (`#f6f8fa`): Secondary surface, sidebar, input background, header strip.
-- **Canvas Inset** (`#eaeef2`): Code block background, deep-inset surface.
-- **Fg Default** (`#1f2328`): Primary text, headlines, ink.
-- **Fg Muted** (`#656d76`): Secondary text, captions, file paths.
+### Light（默认）
+- **Canvas**: `#ffffff`（画布/面板）
+- **Soft Gray**: `#f1f4f7`（副面、hover、表头、kbd）
+- **Web Wash**: `#f0f2f5`（hover 强化）
+- **Dark Charcoal**: `#1c2b33`（正文）；**Primary Text** `#050505`（强调标题）
+- **Secondary Text**: `#65676b`（次要说明）；**CTA Disabled** `#8595a4`（占位/禁用文字）
+- **Divider**: `#ced0d4`（边框）；**Divider Gray** `#dee3e9`（内部分隔）；**CTA Gray Border** `#cbd2d9`（按钮描边）
+- **Meta Blue** `#0064e0`（主 CTA/链接/focus）；hover `#0143b5`；pressed `#004bb9`
+- **Baby Blue** `#e8f3ff`（激活/选中底）；上字 `#0143b5`
+- **Semantic**: success `#007d1e` / warn `#9a6700` / danger `#c80a28`（底用 `rgba` 淡色）
+- **GitHub 代码（浅）**: 字符串/键 `#0a3069`、数字 `#0550ae`、布尔 `#cf222e`、diff 增 `#e6ffec` 删 `#ffebe9`
 
-### Brand Accent
-- **Primer Blue** (`#0969da`): Links, primary CTAs, focus ring base — the universal interactive color.
-- **Primer Blue Hover** (`#0550ae`): Hover/pressed for primary blue.
-- **Accent Subtle** (`#ddf4ff`): Soft blue surface for callouts, info banners.
-
-### Semantic
-- **Success / Merge Green** (`#1a7f37`): Merged PRs, success badges, merge button.
-- **Success Subtle** (`#dafbe1`): Success surface tint.
-- **Open Green** (`#1a7f37`): "Open" issue/PR state.
-- **Closed / Danger Red** (`#cf222e`): Closed PRs, destructive action, validation error.
-- **Danger Subtle** (`#ffebe9`): Error banner surface.
-- **Attention / Warning Yellow** (`#9a6700`): Warning text on amber surface.
-- **Attention Subtle** (`#fff8c5`): Warning banner surface.
-- **Done Purple** (`#8250df`): Merged-and-archived, "done" state, premium badge.
-- **Sponsor Pink** (`#bf3989`): Sponsors heart, GitHub sponsors brand.
-
-### Border & Divider
-- **Border Default** (`#d0d7de`): Standard hairline border, panel outline.
-- **Border Muted** (`#d8dee4`): Inner dividers within a panel.
-- **Border Subtle** (`#eaeef2`): Faint table row dividers.
-
-### Dark Theme
-- **Dark Canvas** (`#0d1117`): Dark page background.
-- **Dark Surface** (`#161b22`): Sidebar, header, secondary surface.
-- **Dark Border** (`#30363d`): Standard dark-mode border.
-- **Dark Fg** (`#e6edf3`): Primary text on dark.
+### Dark（沉浸式）
+- **Canvas**: `#181a1b`；surface `#1c1e21`；hover `#232527`/`#2b2e30`
+- **Fg**: `#f0f2f5`；muted `#b3bac1`；faint `#7d858d`
+- **Border**: `rgba(255,255,255,0.1)`（发丝）
+- **Meta Blue Light** `#47a5fa`（深底 CTA，文字用深色 `#0b1220`）；hover `#66b6ff`
+- **Semantic**: success `#3fb950` / warn `#d29922` / danger `#f85149`
+- **GitHub 代码（深）**: 字符串/键 `#a5d6ff`、数字 `#79c0ff`、布尔 `#ff7b72`、diff 增 `rgba(46,160,67,0.18)` 删 `rgba(248,81,73,0.16)`
 
 ## 3. Typography Rules
 
-### Font Family
-- **Body / UI**: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif`
-- **Code / Mono**: `ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace`
-- **Emoji**: `"Apple Color Emoji", "Segoe UI Emoji"`
+### 字号阶梯（唯一合法刻度：11 / 12 / 13 / 14）
 
-### Hierarchy
+| 刻度 | 用途 | 备注 |
+|------|------|------|
+| 11px | kbd 快捷键 | 等宽 |
+| 12px | 徽标、面板 meta、组标题、说明 | `+0.01em` 字距 |
+| 13px | 提示、列表、胶囊、路径、表格、分段 | |
+| 14px | 正文/UI、按钮、输入、侧栏、编辑器 | 代码编辑器 14px，行高 1.7 |
 
-| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
-|------|------|------|--------|-------------|----------------|-------|
-| Display | system-ui | 32px (2rem) | 600 | 1.25 | -0.01em | Repo header, marketing hero |
-| H1 | system-ui | 24px (1.5rem) | 600 | 1.25 | normal | Page heading |
-| H2 | system-ui | 20px (1.25rem) | 600 | 1.25 | normal | Section heading |
-| H3 | system-ui | 16px (1rem) | 600 | 1.25 | normal | Sub-section, panel header |
-| Body | system-ui | 14px (0.875rem) | 400 | 1.5 | normal | Default text size — not 16px |
-| Body Small | system-ui | 12px (0.75rem) | 400 | 1.4 | normal | Captions, file metadata |
-| Code | SFMono | 12px (0.75rem) | 400 | 1.45 | normal | Code blocks, diff |
-| Code Inline | SFMono | 0.85em | 400 | inherit | normal | Inline `code` spans |
-
-### Principles
-- **14px body, not 16px**: GitHub's prose density is its identity. The product reads at 14px to fit more rows in a viewport.
-- **Weight binary**: 400 for everything by default; 600 for headlines and emphasis. No 500, no 700.
-- **System fonts always**: never load a webfont for chrome — text must render instantly on slow connections.
+### 规范
+- **禁碎刻度**：不得出现 12.5px / 13.5px
+- 行高：正文 1.6；编辑器/代码/多行中文空态 1.7
+- 字距：全大写标签 ≥0.06em；小号文字 +0.01em；拉丁显示 -0.01em；中文一律 0
+- 字重三级：400 正文 / 500 按钮导航 / 600 标题激活
+- 字体：display/body 共用 `"Optimistic VF", Inter, Montserrat, Helvetica, Arial, "Noto Sans"`；代码 `ui-monospace, "SF Mono", Menlo, Consolas`
 
 ## 4. Component Stylings
 
-### Buttons
+### Buttons（胶囊）
+- **Primary**: 底 `#0064e0`（深色 `#47a5fa`），字白/深；hover 变深 + `scale(1.05)`；按下 `scale(0.97)`；禁用 = 灰底灰字
+- **Secondary**: 白底 + `#cbd2d9` 描边，hover 副面
+- **Danger**: 透明底红字，hover 淡红底
+- **Ghost**: 透明，hover 副面
+- 统一 `--radius-pill`（100px）、padding 7px 18px、focus 2px 蓝环
 
-**Primary (Green)**
-- Background: `#1f883d`
-- Text: `#ffffff`
-- Border: 1px solid `rgba(31, 35, 40, 0.15)`
-- Padding: 5px 16px
-- Radius: 6px
-- Shadow: `0 1px 0 rgba(31,35,40,0.1)`
-- Hover: background `#1a7f37`
-- Use: "Create repository", "Merge pull request"
+### Switch / 分段 / 胶囊
+- **Switch**: 38×23、拇指 18px、checked = `--accent`
+- **Segmented**（缩进 2/4）: `--surface-1` 胶囊轨道，选中段白底 + 轻阴影 + 600 字重
+- **Chip**: pill，选中 = Baby Blue 底 + 深蓝字
 
-**Default**
-- Background: `#f6f8fa`
-- Text: `#1f2328`
-- Border: 1px solid `#d0d7de`
-- Padding: 5px 16px
-- Radius: 6px
-- Hover: background `#f3f4f6`, border `#d0d7de`
+### 浮层 / 面板
+- **下拉/命令面板**: 白卡 + 20/24px 圆角 + 双阴影 + 遮罩 `rgba(0,0,0,0.6)`
+- **pane**: 20px 圆角、`#dee3e9` 发丝边框
+- **输入**: 8px 圆角、focus 环 `0 0 0 3px` 蓝
 
-**Outline (Blue Link Style)**
-- Background: `#ffffff`
-- Text: `#0969da`
-- Border: 1px solid `#d0d7de`
-- Hover: background `#0969da`, text `#ffffff`
-
-**Danger**
-- Background: `#ffffff`
-- Text: `#cf222e`
-- Border: 1px solid `#d0d7de`
-- Hover: background `#a40e26`, text `#ffffff`, border `#a40e26`
-
-### Cards / Boxes
-- Background: `#ffffff`
-- Border: 1px solid `#d0d7de`
-- Radius: 6px
-- Padding: 16px (header) + 16px (body)
-- Header has a `#f6f8fa` strip with bottom border.
-
-### Inputs
-- Background: `#ffffff`
-- Border: 1px solid `#d0d7de`
-- Radius: 6px
-- Padding: 5px 12px
-- Focus: border `#0969da`, ring `0 0 0 3px rgba(9,105,218,0.3)`
-
-### Status Pills (Issue / PR)
-- **Open**: background `#1a7f37`, text white, padding 4px 10px, radius 9999px.
-- **Closed**: background `#cf222e`, text white.
-- **Merged**: background `#8250df`, text white.
-- **Draft**: background `#6e7781`, text white.
-
-### Labels (Tags on Issues/PRs)
-- Padding: 0 7px
-- Radius: 9999px
-- Font: 12px / 500
-- Background and text are programmatic (label color → text computed for contrast).
+### Sidebar
+- 通栏扁平行（无圆角）；active = Baby Blue 整行 + `inset 3px 0 0` Meta Blue；搜索框无边框灰底；分组大写标签 `+0.06em`
 
 ## 5. Spacing & Layout
 
-- **Base unit**: 4px. Spacing scale: 4, 8, 12, 16, 24, 32, 40, 48.
-- **Page max-width**: 1280px (`Container-xl`).
-- **Sidebar**: 296px on desktop, collapses below 1012px.
-- **Row padding**: 16px horizontal, 12px vertical (lists are dense by design).
+- **基础单位**：8px；工具页内边距 18/20px，面板间距 14px
+- 侧边栏 236px；窄窗口 `<860px` 收缩为 48px 图标条
 
 ## 6. Motion
 
-- **Duration**: 80ms for hover; 200ms for menu/popover open.
-- **Easing**: `ease-out` for opens, `ease-in` for closes.
-- **Avoided**: page-load animation, parallax, persistent micro-interactions. Things appear; they do not perform.
+- hover/状态切换 150ms、浮层 200ms，`cubic-bezier(0.2,0,0,1)`
+- 按钮 hover/按下用 scale 微动效；`prefers-reduced-motion` 全部关闭
 
-## 7. Usage Guardrails
+## 7. Usage Guardrails（违反即返工）
 
-- Keep dense lists, bordered boxes, and system typography together; isolated green buttons are not enough to create a GitHub-like product surface.
-- Use green for constructive repository actions, blue for links and focus, and red/purple/gray only for issue, PR, and workflow states.
-- Prefer quiet chrome, explicit borders, and compact spacing over decorative shadows or large marketing-style cards.
+- 不用 emoji 作图标（用 1.5px 单线 SVG）
+- 不用 Facebook Blue `#1877F2` 作主 CTA；不引入 Meta Blue 之外的第二强调色
+- 不写 <8px 圆角；不偏离 8/20/24/100
+- 除浮层外不加投影；暗色卡片靠边框/色阶
+- 不引入 12.5/13.5 碎字号；不超过 4 档字号
+- 代码区不离开 GitHub 默认配色
+- 对比度：正文 ≥4.5:1，大号/图标 ≥3:1；hover 永不调浅文字
+
+## 8. Source of Truth
+
+- 实现：`src/App.css`、`src/tools/tool.css`、`src/monaco-setup.ts`
+- 设计稿：`devbox-style-prototype.html`（Open Design 设计文件区）

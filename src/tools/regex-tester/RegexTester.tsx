@@ -156,11 +156,11 @@ export function RegexTester() {
         <Editor
           height="60%"
           language="text"
-          theme={theme === "dark" ? "vs-dark" : "light"}
+          theme={theme === "dark" ? "devbox-dark" : "devbox-light"}
           value={text}
           onChange={(v) => setText(v ?? "")}
           onMount={handleMount}
-          options={{ minimap: { enabled: false }, fontSize: 13, wordWrap: "on" }}
+          options={{ minimap: { enabled: false }, fontSize: 14, wordWrap: "on" }}
         />
         {matches.length > 0 && (
           <div className="match-list" style={{ marginTop: 8 }}>

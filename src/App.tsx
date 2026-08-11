@@ -47,7 +47,7 @@ export default function App() {
         </div>
       </header>
       <div className="app-body">
-        <Sidebar isSettings={isSettings} onSelect={setActiveTool} />
+        <Sidebar isSettings={isSettings} onSelect={setActiveTool} onSearch={() => setCmdOpen(true)} />
         <main className="work-area">
           <div className="tool-slot">
             <div className="tool-stage">
