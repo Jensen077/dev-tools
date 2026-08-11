@@ -51,3 +51,15 @@
 - **现象**：`URL.createObjectURL` + 动态 `<a download>` + `click()` 无任何反应。
 - **根因**：WKWebView 要求 anchor 挂载到 DOM 才处理下载，且 blob 下载落到系统下载目录、无法选路径。
 - **对策**：导出走系统保存对话框：`@tauri-apps/plugin-dialog` 的 `save()` 选路径 + 自定义 `#[tauri::command] save_text_file`（`std::fs::write`）写入；capabilities 需加 `dialog:allow-save`。选择 Rust 写文件而非 `plugin-fs` 可避免 fs scope 白名单配置。
+
+## serde_json 默认 BTreeMap 输出字母序，JS 降级需 sortKeys 对齐
+
+- **现象**：网页版格式化 `{"b":1,"a":2}` 输出 `b` 在前，桌面版输出 `a` 在前，同一输入两端结果不一致。
+- **根因**：`Cargo.toml` 的 `serde_json = "1"` 未启用 `preserve_order` 特性，`Value::Object` 用 `BTreeMap`，`to_string_pretty` 按键字母序输出；JS `JSON.stringify` 保留对象插入序。
+- **对策**：`src/utils/backend.ts` 的 JS 降级实现统一经 `sortKeys()` 递归排序对象键后再序列化，与桌面 BTreeMap 行为对齐。新增任何返回 JSON 结构的降级命令都要走 `sortKeys`。
+
+## 浏览器无 __TAURI_INTERNALS__，invoke 调用静默抛错
+
+- **现象**：网页版 `invoke("xxx")` 调用直接 reject，无报错堆栈，工具内 catch 显示通用错误。
+- **根因**：`@tauri-apps/api/core` 的 `invoke` 依赖 Tauri 注入的 `window.__TAURI_INTERNALS__`；纯浏览器（含 GitHub Pages 静态托管）无此全局，invoke 在调用时抛 `__TAURI_INTERNALS__...` 错误（import 本身不报错）。
+- **对策**：`backend.ts` 的 `isDesktop()` 检测 `"__TAURI_INTERNALS__" in window`，桌面走 `invoke`、网页走 `jsImpls`；`isDesktop()` 守卫在调用前分支，确保浏览器永不进入 invoke 路径。curl 等无 JS 等价的命令网页版禁用按钮 + 提示，不进 backend。

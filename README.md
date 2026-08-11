@@ -2,6 +2,8 @@
 
 一款面向开发者的桌面工具箱应用，解决日常开发中高频的 JSON 处理、文本比对、日志分析、调试辅助等需求。基于 Tauri 2 + React + TypeScript，macOS 原生体验，体积小、启动快。
 
+> 同一份前端代码可构建为纯静态网页版部署到 GitHub Pages（见下方「网页版」），桌面端走 Rust 后端，网页端走 JS 降级实现，详见 `src/utils/backend.ts`。
+
 ## 功能一览
 
 ### JSON 系列
@@ -69,6 +71,16 @@ pnpm build
 ```
 
 构建产物位于 `src-tauri/target/release/bundle/macos/devbox.app`。
+
+## 网页版（GitHub Pages）
+
+同一套前端代码可零服务端部署到 GitHub Pages：`pnpm build` 产出的 `dist/` 即静态站点。
+
+- **桌面端**：Tauri 环境检测到 `window.__TAURI_INTERNALS__`，JSON 格式化/比对/提取/表格导出走 Rust 命令（`invoke`），curl 调用系统二进制
+- **网页端**：4 个 JSON 命令在浏览器内用 JS 降级实现（与 Rust 返回结构逐字段对齐，对象键按字母序排序以匹配 `serde_json` 默认 BTreeMap 行为）；表格导出改为 `Blob` + `<a download>`；curl 因需调用系统二进制且受 CORS 限制，网页版禁用并提示「请使用桌面版」
+- **部署**：push 到 `main` 触发 `.github/workflows/pages.yml` 自动构建发布；仓库 Settings → Pages → Source 选「GitHub Actions」即可
+
+> 其余工具（时间戳/Hash/JWT/UUID/编码转换/正则测试/参数转换/图片预览/文本比对/字段提取/历史记录）纯前端实现，桌面与网页行为完全一致。
 
 ## 下载
 

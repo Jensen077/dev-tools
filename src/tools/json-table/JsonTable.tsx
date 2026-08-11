@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
+import { isDesktop } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
@@ -238,10 +239,24 @@ export function JsonTable() {
   const exportFile = useCallback(
     async (content: string, name: string, filters: { name: string; extensions: string[] }[]) => {
       try {
-        const path = await save({ defaultPath: name, filters });
-        if (!path) return;
-        await invoke("save_text_file", { path, content });
-        showToast(`已保存到 ${path}`, "success", 3000);
+        if (isDesktop()) {
+          const path = await save({ defaultPath: name, filters });
+          if (!path) return;
+          await invoke("save_text_file", { path, content });
+          showToast(`已保存到 ${path}`, "success", 3000);
+        } else {
+          // 浏览器：Blob + a[download]（WKWebView 下此方案静默失败，故仅网页分支走此路）
+          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast(`已下载 ${name}`, "success", 3000);
+        }
       } catch (e) {
         showToast(e instanceof Error ? e.message : String(e), "error", 4000);
       }

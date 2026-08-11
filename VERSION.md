@@ -3,6 +3,22 @@
 > 版本号三处同步维护：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`。
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 
+## v1.0.7 — 2026-08-11
+
+**新增**
+- 网页版（GitHub Pages）：同一套前端代码零服务端部署，`pnpm build` 产出的 `dist/` 即静态站点
+- `src/utils/backend.ts` 适配层：桌面检测 `window.__TAURI_INTERNALS__` 走 Rust `invoke`，网页走 JS 降级实现，桌面端语义零变化
+- 4 个 JSON 命令的 JS 降级（与 Rust 返回结构逐字段对齐）：`fmt_json`/`min_json`（含 `sortKeys` 匹配 serde_json BTreeMap 字母序）、`compare_json`（diff 树移植）、`extract_json_cmd`（括号配平扫描器移植）
+- 表格导出网页分支：`Blob` + `<a download>` 下载（桌面仍走系统保存对话框）
+- `.github/workflows/pages.yml`：push 到 `main` 自动构建发布到 GitHub Pages
+- `.github/workflows/release.yml`：push `v*` 标签触发矩阵构建——macos universal dmg / ubuntu deb+AppImage / windows msi+nsis，挂资产到草稿 Release（未签名未公证）
+- `tauri.conf.json` 的 `bundle.targets` 增加 `deb`、`appimage`（Tauri 按宿主 OS 自动过滤）
+- `vite.config.ts` 加 `base: "./"`（相对路径，项目页/组织页通吃）
+
+**网页版限制**
+- Curl 执行需调用系统二进制且受 CORS 限制，网页版禁用并提示「请使用桌面版」
+- `extract_json_cmd` 的 `start/end` 偏移为 UTF-16 索引（Rust 为字节偏移），非 ASCII 日志展示数字略有出入，不影响提取结果
+
 ## v1.0.6 — 2026-08-10
 
 **新增**

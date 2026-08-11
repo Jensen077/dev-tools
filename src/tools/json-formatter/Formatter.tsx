@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { backend } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { JsonOutput } from "../../components/JsonOutput";
 import { useAppStore } from "../../store/app";
@@ -53,7 +53,7 @@ export function Formatter() {
   useEffect(() => {
     if (extractedJson) {
       setInput(extractedJson);
-      invoke<string>("fmt_json", { input: extractedJson, indent })
+      backend<string>("fmt_json", { input: extractedJson, indent })
         .then(setOutput)
         .catch((e) => setError(toParseError(e)));
       setExtractedJson("");
@@ -67,8 +67,8 @@ export function Formatter() {
       try {
         const result =
           mode === "format"
-            ? await invoke<string>("fmt_json", { input, indent })
-            : await invoke<string>("min_json", { input });
+            ? await backend<string>("fmt_json", { input, indent })
+            : await backend<string>("min_json", { input });
         setOutput(result);
         addHistory({
           toolId: "json-formatter",
@@ -104,7 +104,7 @@ export function Formatter() {
   useEffect(() => {
     if (!autoRun || !input.trim()) return;
     const t = setTimeout(() => {
-      invoke<string>("fmt_json", { input, indent })
+      backend<string>("fmt_json", { input, indent })
         .then(setOutput)
         .catch((e) => setError(toParseError(e)));
     }, 600);
