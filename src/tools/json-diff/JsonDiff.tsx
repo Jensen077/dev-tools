@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { backend } from "../../utils/backend";
 import type { editor } from "monaco-editor";
 import { JsonEditor } from "../../components/JsonEditor";
 import { TextDiffEditor } from "../../components/TextDiffEditor";
@@ -59,11 +59,11 @@ export function JsonDiff() {
     if (!left.trim() || !right.trim()) return;
     setError(null);
     try {
-      const node = await invoke<DiffNode>("compare_json", { left, right });
+      const node = await backend<DiffNode>("compare_json", { left, right });
       // 用 Rust 的格式化把两边标准化为 pretty JSON，交给 Monaco diff
       const [lp, rp] = await Promise.all([
-        invoke<string>("fmt_json", { input: left, indent: 2 }),
-        invoke<string>("fmt_json", { input: right, indent: 2 }),
+        backend<string>("fmt_json", { input: left, indent: 2 }),
+        backend<string>("fmt_json", { input: right, indent: 2 }),
       ]);
       setLeftPretty(lp);
       setRightPretty(rp);

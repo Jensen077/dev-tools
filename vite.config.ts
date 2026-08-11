@@ -13,6 +13,8 @@ const monacoRoot = fileURLToPath(
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
+  // GitHub Pages 子路径部署用相对 base，桌面/网页通吃（无 SPA 路由故无 404）
+  base: "./",
   plugins: [react()],
   resolve: {
     // monaco-editor 的 package exports map 会把 `esm/vs` 前缀翻倍导致解析失败，

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { isDesktop } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
@@ -65,7 +66,7 @@ export function CurlRunner() {
   return (
     <div className="tool-page">
       <div className="toolbar">
-        <button className="btn btn-primary" data-hotkey="run" onClick={run} disabled={!input.trim() || loading}>
+        <button className="btn btn-primary" data-hotkey="run" onClick={run} disabled={!isDesktop() || !input.trim() || loading}>
           {loading ? "执行中…" : "执行"}
           <span className="btn-hotkey">⌘↩</span>
         </button>
@@ -77,6 +78,9 @@ export function CurlRunner() {
         <button className="btn" onClick={() => setInput("")}>清空</button>
         <ToolHistory toolId="curl-runner" />
       </div>
+      {!isDesktop() && (
+        <div className="error-box">网页版不支持执行 curl（浏览器无法调用系统命令且受 CORS 限制），请使用桌面版</div>
+      )}
       {runError && <div className="error-box">执行失败: {runError}</div>}
 
       <div className="pane" style={{ flex: 1 }}>

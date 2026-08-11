@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { backend } from "../../utils/backend";
 import { JsonEditor } from "../../components/JsonEditor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
@@ -36,7 +36,7 @@ export function LogExtractor() {
     if (!input.trim()) return;
     setError(null);
     try {
-      const result = await invoke<JsonMatch[]>("extract_json_cmd", { input });
+      const result = await backend<JsonMatch[]>("extract_json_cmd", { input });
       setMatches(result);
       setSelected(0);
       // 仅在有命中时记录历史，避免无价值条目堆积
