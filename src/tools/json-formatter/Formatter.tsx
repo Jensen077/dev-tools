@@ -74,7 +74,10 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
     if (extractedJson) {
       setInput(extractedJson);
       backend<string>("fmt_json", { input: extractedJson, indent })
-        .then(setOutput)
+        .then((r) => {
+          setOutput(r);
+          setError(null);
+        })
         .catch((e) => setError(toParseError(e)));
       setExtractedJson("");
     }
@@ -131,7 +134,10 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
     if (!autoRun || !input.trim()) return;
     const t = window.setTimeout(() => {
       backend<string>("fmt_json", { input, indent })
-        .then(setOutput)
+        .then((r) => {
+          setOutput(r);
+          setError(null);
+        })
         .catch((e) => setError(toParseError(e)));
     }, 600);
     autoTimerRef.current = t;

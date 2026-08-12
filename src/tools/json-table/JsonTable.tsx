@@ -10,8 +10,14 @@ import { useSaveDraft } from "../../hooks/useSaveDraft";
 import { ToolHistory } from "../../components/ToolHistory";
 import { ResizableSplit } from "../../components/ResizableSplit";
 import { useFileDrop } from "../../hooks/useFileDrop";
+import { readFileAsUtf8 } from "../../utils/fileEncoding";
 import { useToastStore } from "../../store/toast";
 import "../tool.css";
+
+/** 转义 key 中的 `\` 与 `.`，避免扁平化路径歧义（如 {"a.b":1,"a":{"b":2}} 冲突静默丢数据） */
+function escapeKey(k: string): string {
+  return k.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
+}
 
 /** 递归扁平化对象，嵌套 key 用 `.` 连接；数组折叠为单个单元格（换行拼接） */
 function flatten(obj: unknown, prefix = "", out: Record<string, string> = {}): Record<string, string> {
@@ -28,7 +34,7 @@ function flatten(obj: unknown, prefix = "", out: Record<string, string> = {}): R
   }
   if (typeof obj === "object") {
     for (const [k, v] of Object.entries(obj)) {
-      const key = prefix ? `${prefix}.${k}` : k;
+      const key = prefix ? `${prefix}.${escapeKey(k)}` : escapeKey(k);
       if (v !== null && typeof v === "object") {
         flatten(v, key, out);
       } else {
@@ -54,7 +60,7 @@ function flattenExpand(obj: unknown, prefix = "", out: Record<string, string> = 
   }
   if (typeof obj === "object") {
     for (const [k, v] of Object.entries(obj)) {
-      const key = prefix ? `${prefix}.${k}` : k;
+      const key = prefix ? `${prefix}.${escapeKey(k)}` : escapeKey(k);
       if (v !== null && typeof v === "object") {
         flattenExpand(v, key, out);
       } else {
@@ -67,13 +73,40 @@ function flattenExpand(obj: unknown, prefix = "", out: Record<string, string> = 
   return out;
 }
 
+/** 反转义 flatten 用的转义 key（`\.` → `.`，`\\` → `\`），用于数据源路径解析 */
+function unescapeKey(k: string): string {
+  return k.replace(/\\\./g, ".").replace(/\\\\/g, "\\");
+}
+
+/** 按「未转义的 `.`」分割路径段：`\.`（转义点）保留在段内，普通 `.` 为分隔符 */
+function splitPath(path: string): string[] {
+  const segs: string[] = [];
+  let cur = "";
+  for (let i = 0; i < path.length; i++) {
+    const c = path[i]!;
+    if (c === "\\") {
+      // 反斜杠转义下一字符，原样保留
+      cur += c + (path[i + 1] ?? "");
+      i++;
+    } else if (c === ".") {
+      segs.push(cur);
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  if (cur !== "") segs.push(cur);
+  return segs;
+}
+
 /** 按 `.` 路径取文档子值，空路径返回整个文档 */
 function getPath(data: unknown, path: string): unknown {
   if (path === "") return data;
   let cur: unknown = data;
-  for (const k of path.split(".")) {
-    if (cur && typeof cur === "object" && k in cur) {
-      cur = (cur as Record<string, unknown>)[k];
+  for (const k of splitPath(path)) {
+    const key = unescapeKey(k);
+    if (cur && typeof cur === "object" && key in cur) {
+      cur = (cur as Record<string, unknown>)[key];
     } else {
       return undefined;
     }
@@ -89,7 +122,7 @@ export function collectArrayPaths(data: unknown, prefix = "", out: string[] = []
   }
   if (data && typeof data === "object") {
     for (const [k, v] of Object.entries(data)) {
-      const key = prefix ? `${prefix}.${k}` : k;
+      const key = prefix ? `${prefix}.${escapeKey(k)}` : escapeKey(k);
       collectArrayPaths(v, key, out);
     }
   }
@@ -100,7 +133,7 @@ export function collectArrayPaths(data: unknown, prefix = "", out: string[] = []
 function defaultSource(data: unknown, paths: string[]): string | null {
   if (Array.isArray(data)) return "";
   const topArrays = Object.entries(data as Record<string, unknown>).filter(([, v]) => Array.isArray(v));
-  if (topArrays.length === 1) return topArrays[0]![0];
+  if (topArrays.length === 1) return escapeKey(topArrays[0]![0]);
   return paths[0] ?? null;
 }
 
@@ -147,7 +180,8 @@ export function toCsv(rows: Record<string, string>[]): string {
   for (const r of rows) {
     lines.push(headers.map((h) => escape(r[h] ?? "")).join(","));
   }
-  return lines.join("\n");
+  // 行分隔用 CRLF（RFC 4180）；前置 UTF-8 BOM 让 Windows Excel 按 UTF-8 识别中文，避免按 ANSI(GBK) 解码乱码
+  return `\uFEFF${lines.join("\r\n")}`;
 }
 
 export function toJsonl(rows: Record<string, string>[]): string {
@@ -178,7 +212,7 @@ export function JsonTable() {
   useApplyHistory("json-table", ({ input }) => setInput(input ?? ""));
 
   const loadFile = useCallback(async (file: File) => {
-    setInput(await file.text());
+    setInput(await readFileAsUtf8(file));
   }, []);
 
   const { bindDrop, isDragging } = useFileDrop({ onFile: loadFile, accept: [".json", ".txt"] });
@@ -394,7 +428,7 @@ export function JsonTable() {
           ref={fileRef}
           type="file"
           hidden
-          onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setInput)}
+          onChange={(e) => e.target.files?.[0] && readFileAsUtf8(e.target.files[0]).then(setInput)}
         />
         <ToolHistory toolId="json-table" />
       </div>

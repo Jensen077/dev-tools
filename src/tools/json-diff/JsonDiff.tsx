@@ -9,6 +9,7 @@ import { useSaveDraft } from "../../hooks/useSaveDraft";
 import { ToolHistory } from "../../components/ToolHistory";
 import { ResizableSplit } from "../../components/ResizableSplit";
 import { useFileDrop } from "../../hooks/useFileDrop";
+import { readFileAsUtf8 } from "../../utils/fileEncoding";
 import type { DiffNode, ParseError } from "../../types";
 import { isParseError } from "../../types";
 import "../tool.css";
@@ -86,7 +87,8 @@ function findPathLine(pretty: string, path: string): number {
       const idx = seg.index!;
       let seen = -1;
       for (let i = pos + 1; i < lines.length; i++) {
-        if (indentOf(i) === targetIndent && !trim(i).startsWith("}")) {
+        // 跳过闭合括号行（对象元素结束 `}` / 嵌套数组元素结束 `]`），否则被误计为元素
+        if (indentOf(i) === targetIndent && !trim(i).startsWith("}") && !trim(i).startsWith("]")) {
           seen++;
           if (seen === idx) {
             found = i;
@@ -138,8 +140,15 @@ export function JsonDiff() {
         ]);
         setLeftPretty(lp);
         setRightPretty(rp);
-        // 收集根节点下的所有变更（跳过根自身，其 path 恒为 `$`）
-        setChanges(node.children.flatMap((c) => flattenChanges(c)));
+        // 标准化后相同 → 无变更；否则当根节点为标量（如 1 vs 2）时 node 无子节点，
+        // 需把根节点自身作为变更展示，避免「完全一致」误报
+        const rawChanges =
+          lp === rp
+            ? []
+            : node.children.length === 0
+              ? flattenChanges(node)
+              : node.children.flatMap((c) => flattenChanges(c));
+        setChanges(rawChanges);
         if (fromUser) {
           addHistory({
             toolId: "json-diff",
@@ -157,7 +166,14 @@ export function JsonDiff() {
 
   // 自动比对：两侧输入就绪后 500ms 防抖触发（保留手动「比对」按钮兜底）
   useEffect(() => {
-    if (!left.trim() || !right.trim()) return;
+    if (!left.trim() || !right.trim()) {
+      // 任一侧为空：清空残留比对结果与错误，避免展示与输入不符的旧 diff
+      setChanges([]);
+      setLeftPretty("");
+      setRightPretty("");
+      setError(null);
+      return;
+    }
     if (autoTimerRef.current) window.clearTimeout(autoTimerRef.current);
     autoTimerRef.current = window.setTimeout(() => {
       void compare(false);
@@ -190,10 +206,10 @@ export function JsonDiff() {
   }, []);
 
   const loadLeft = useCallback(async (file: File) => {
-    setLeft(await file.text());
+    setLeft(await readFileAsUtf8(file));
   }, []);
   const loadRight = useCallback(async (file: File) => {
-    setRight(await file.text());
+    setRight(await readFileAsUtf8(file));
   }, []);
 
   const leftDrop = useFileDrop({ onFile: loadLeft, accept: [".json", ".txt"] });
@@ -247,13 +263,13 @@ export function JsonDiff() {
         ref={leftFileRef}
         type="file"
         hidden
-        onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setLeft)}
+        onChange={(e) => e.target.files?.[0] && readFileAsUtf8(e.target.files[0]).then(setLeft)}
       />
       <input
         ref={rightFileRef}
         type="file"
         hidden
-        onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setRight)}
+        onChange={(e) => e.target.files?.[0] && readFileAsUtf8(e.target.files[0]).then(setRight)}
       />
       <ResizableSplit
         left={

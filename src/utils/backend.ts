@@ -60,12 +60,8 @@ function reindent(s: string, indent: number): string {
     .map((line) => {
       const trimmed = line.trimStart();
       const depth = Math.floor((line.length - trimmed.length) / 2);
-      // 闭合括号行回退一级，对齐 Rust 的 saturating_sub
-      const d =
-        trimmed.startsWith("}") || trimmed.startsWith("]")
-          ? Math.max(0, depth - 1)
-          : depth;
-      return unit.repeat(d) + trimmed;
+      // 闭合括号行与开启块同缩进，depth 直接复用（与 Rust reindent 对齐）
+      return unit.repeat(depth) + trimmed;
     })
     .join("\n");
 }

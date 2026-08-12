@@ -60,16 +60,11 @@ fn reindent(s: &str, indent: usize) -> String {
     let unit = " ".repeat(indent);
     let mut out = String::with_capacity(s.len());
     for line in s.lines() {
-        // serde_json pretty 输出每行缩进为 2*depth 空格
+        // serde_json pretty 输出每行缩进为 2*depth 空格；
+        // 闭合括号行与开启块同缩进，depth 直接复用即可（勿回退一级）
         let leading = line.len() - line.trim_start().len();
         let line_depth = leading / 2;
-        // 闭合括号行需要回退一级
-        let d = if line.trim_start().starts_with('}') || line.trim_start().starts_with(']') {
-            line_depth.saturating_sub(1)
-        } else {
-            line_depth
-        };
-        out.push_str(&unit.repeat(d));
+        out.push_str(&unit.repeat(line_depth));
         out.push_str(line.trim_start());
         out.push('\n');
     }
@@ -95,6 +90,16 @@ mod tests {
         let out = format_json(SAMPLE, 4).unwrap();
         assert!(out.contains("\n    \"a\""));
         assert!(out.contains("\n        \"c\""));
+    }
+
+    #[test]
+    fn format_pretty_indent4_closing_brackets_aligned() {
+        // 闭合括号与开启块同缩进：`c` 数组结束 `]` 应与 `"c": [` 同级缩进
+        let out = format_json(SAMPLE, 4).unwrap();
+        assert_eq!(
+            out,
+            "{\n    \"a\": 1,\n    \"b\": {\n        \"c\": [\n            1,\n            2\n        ],\n        \"d\": \"x\"\n    },\n    \"e\": null\n}"
+        );
     }
 
     #[test]

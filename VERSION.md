@@ -4,7 +4,18 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## Unreleased
+## v1.0.11 — 2026-08-12
+
+**修复：JSON 格式化/比对/表格导出/文本比对四工具问题排查**（逐项复现验证）
+
+- `format.rs`/`backend.ts` `reindent` 闭合括号错位：缩进 4 时 `}`/`]` 少缩一级（如 `],` 应为 8 空格、`},` 应为 4 空格），根因是闭合括号行被多余地 `saturating_sub(1)`——serde pretty 输出中闭合括号与开启块同缩进；去掉特判统一 `line_depth`，补精确断言测试 `format_pretty_indent4_closing_brackets_aligned`（原测试只断言开启行缩进，未捕获此问题）
+- `JsonDiff.tsx` `findPathLine` 嵌套数组定位错行：数组元素计数只跳过 `}` 开头行，数组元素为嵌套数组时其闭合 `],` 被误计为元素（如 `$.list[1]` 跳到元素 0 的闭合行）；补跳 `]` 开头行
+- `JsonDiff.tsx` 标量根差异漏报：`1` vs `2` 时 diff 树根节点无 children，变更列表误显「完全一致」；改为以标准化 `leftPretty===rightPretty` 判定无变更，无子节点时把根节点自身纳入变更列表
+- `JsonDiff.tsx` 清空任一侧输入残留旧 diff/错误：自动比对 effect 在任一侧为空时清空 `changes`/`leftPretty`/`rightPretty`/`error`
+- `Formatter.tsx` 自动格式化/日志提取成功后不清历史解析错误：成功回调补 `setError(null)`，避免改好 JSON 后错误红框仍在
+- 非 UTF-8 文件乱码：`json-diff`/`json-table` 的拖拽与「打开文件」改用 `readFileAsUtf8`（GBK 回退），此前 `file.text()` 仅 UTF-8 解码，与 Formatter/TextDiff 不一致
+- `JsonTable.tsx` 扁平化 key 冲突静默丢数据：`{"a.b":1,"a":{"b":2}}` 后写覆盖前写；`escapeKey` 转义 key 中的 `\`/`.`，数据源路径（`collectArrayPaths`/`getPath`/`defaultSource`）同步转义，`splitPath` 按未转义点分割、`unescapeKey` 反转义
+- `JsonTable.tsx` `toCsv` 前置 UTF-8 BOM + 行分隔改 CRLF（RFC 4180），修复 Windows Excel 按 ANSI 解码中文乱码
 
 **JSON 比对交互优化**（自动比对 + 只看变更 + 导航 + 精确路径定位）
 
