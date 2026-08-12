@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { Formatter } from "./json-formatter/Formatter";
+import { FormatterTabs } from "./json-formatter/FormatterTabs";
 import { JsonDiff } from "./json-diff/JsonDiff";
 import { LogExtractor } from "./log-extractor/LogExtractor";
 import { TextDiff } from "./text-diff/TextDiff";
@@ -28,7 +28,7 @@ export interface ToolDef {
 
 /** 工具注册表：新增工具只需在此追加一项 */
 export const TOOLS: ToolDef[] = [
-  { id: "json-formatter", name: "JSON 格式化", icon: <ToolIcon name="json-formatter" />, component: Formatter, cat: "JSON" },
+  { id: "json-formatter", name: "JSON 格式化", icon: <ToolIcon name="json-formatter" />, component: FormatterTabs, cat: "JSON" },
   { id: "json-diff", name: "JSON 比对", icon: <ToolIcon name="json-diff" />, component: JsonDiff, cat: "JSON" },
   { id: "log-extractor", name: "日志提取", icon: <ToolIcon name="log-extractor" />, component: LogExtractor, cat: "JSON" },
   { id: "text-diff", name: "文本比对", icon: <ToolIcon name="text-diff" />, component: TextDiff, cat: "文本" },
