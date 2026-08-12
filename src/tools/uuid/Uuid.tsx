@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
 import { useSaveDraft } from "../../hooks/useSaveDraft";
@@ -38,17 +38,20 @@ export function Uuid() {
   );
   const addHistory = useHistoryStore((s) => s.addHistory);
   const showToast = useToastStore((s) => s.showToast);
+  // 标记本次挂载是否来自历史「加载」，避免挂载时自动生成覆盖历史回填
+  const historyAppliedRef = useRef(false);
 
-  useApplyHistory("uuid", (payload) =>
-    setValues(Object.fromEntries(FORMATS.map((f) => [f.key, payload[f.key] ?? ""]))),
-  );
+  useApplyHistory("uuid", (payload) => {
+    historyAppliedRef.current = true;
+    setValues(Object.fromEntries(FORMATS.map((f) => [f.key, payload[f.key] ?? ""])));
+  });
 
   const regenerate = useCallback(() => setValues(generateBatch()), []);
   const hasValues = Object.values(values).some((v) => v);
 
   // 打开工具时若无历史结果则自动生成一批
   useEffect(() => {
-    if (!hasValues) regenerate();
+    if (!hasValues && !historyAppliedRef.current) regenerate();
     // 仅挂载时执行一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

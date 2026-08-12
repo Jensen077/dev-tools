@@ -4,7 +4,7 @@ import { JsonEditor } from "../../components/JsonEditor";
 import { JsonOutput } from "../../components/JsonOutput";
 import type { editor } from "monaco-editor";
 import { useAppStore } from "../../store/app";
-import { useApplyHistory, useHistoryStore } from "../../store/history";
+import { useHistoryStore } from "../../store/history";
 import { useFileDrop } from "../../hooks/useFileDrop";
 import { ToolHistory } from "../../components/ToolHistory";
 import { ResizableSplit } from "../../components/ResizableSplit";
@@ -65,9 +65,6 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
   useEffect(() => {
     onChangeRef.current?.({ input, indent, autoRun });
   }, [input, indent, autoRun]);
-
-  // 历史「加载」回填输入
-  useApplyHistory("json-formatter", ({ input }) => setInput(input ?? ""));
 
   // 从日志提取页跳转过来时，载入一次并格式化，随后立即消费掉，
   // 避免切换缩进时 effect 用陈旧的 extractedJson 覆盖用户已编辑内容

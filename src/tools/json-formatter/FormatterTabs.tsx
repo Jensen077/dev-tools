@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Formatter, type FormatterData } from "./Formatter";
+import { useApplyHistory } from "../../store/history";
 import "../tool.css";
 import "./formatter-tabs.css";
 
@@ -105,6 +106,16 @@ export function FormatterTabs() {
   }, []);
 
   const active = state.tabs.find((t) => t.id === state.activeId) ?? state.tabs[0]!;
+
+  // 历史「加载」：新建一个 tab 回填历史输入并切过去，避免覆盖当前激活 tab 的内容
+  useApplyHistory("json-formatter", ({ input }) => {
+    const s = stateRef.current;
+    if (s.tabs.length >= MAX_TABS) return;
+    const tab: Tab = { id: randomUuid(), input: input ?? "", indent: 2, autoRun: true };
+    const next: TabsState = { activeId: tab.id, tabs: [...s.tabs, tab] };
+    setState(next);
+    scheduleSave(next);
+  });
 
   const handleChange = useCallback(
     (data: FormatterData) => {

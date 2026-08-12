@@ -49,10 +49,11 @@ export function TextDiff() {
     setChangeStats({ hunks: changes.length, added, removed });
   }, []);
 
-  // 历史「加载」回填输入
+  // 历史「加载」回填输入，并直接展示 diff（左右值已随 props 更新）
   useApplyHistory("text-diff", ({ left, right }) => {
     if (left !== undefined) setLeft(left);
     if (right !== undefined) setRight(right);
+    setShowDiff(true);
   });
 
   const compare = () => {
