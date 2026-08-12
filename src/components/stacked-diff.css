@@ -1,0 +1,25 @@
+/* 上下堆叠比对（StackedDiff）：两侧只读编辑器 + 变更行红/绿底 */
+
+.stacked-editor {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 变更行底色：GitHub 默认配色，深浅主题经 CSS 变量切换 */
+:root {
+  --stacked-removed: #ffebe9;
+  --stacked-added: #e6ffec;
+}
+
+:root[data-theme="dark"] {
+  --stacked-removed: rgba(248, 81, 73, 0.16);
+  --stacked-added: rgba(46, 160, 67, 0.18);
+}
+
+.stacked-removed {
+  background: var(--stacked-removed);
+}
+
+.stacked-added {
+  background: var(--stacked-added);
+}

@@ -18,8 +18,8 @@ import "../tool.css";
 type Mode = "b64-enc" | "b64-dec" | "url-enc" | "url-dec" | "upper" | "lower";
 
 const MODES: { id: Mode; label: string }[] = [
-  { id: "b64-enc", label: "B64 编码" },
-  { id: "b64-dec", label: "B64 解码" },
+  { id: "b64-enc", label: "Base64 编码" },
+  { id: "b64-dec", label: "Base64 解码" },
   { id: "url-enc", label: "URL 编码" },
   { id: "url-dec", label: "URL 解码" },
   { id: "upper", label: "转大写" },

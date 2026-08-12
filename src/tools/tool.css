@@ -230,6 +230,17 @@
   padding: 2px 4px;
 }
 
+/* diff 变更统计：新增绿 / 删除红，字重 600 便于扫读 */
+.diff-stats-added {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.diff-stats-removed {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* 空状态占位：居中图标 + 提示文案，用于 pane 内尚无内容的场景 */
 .empty-state {
   flex: 1;

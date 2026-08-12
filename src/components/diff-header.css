@@ -1,0 +1,64 @@
+/* 并排 diff 顶部常驻统计行（DOM 行，不随内容滚动） */
+
+.diff-side-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.diff-header-row {
+  display: flex;
+  flex-shrink: 0;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.diff-header-half {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.diff-header-half + .diff-header-half {
+  border-left: 1px solid var(--border);
+}
+
+.diff-side-stats {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-side-copy {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  padding: 1px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.diff-side-copy:hover {
+  background: var(--hover);
+}
+
+.diff-side-body {
+  flex: 1;
+  min-height: 0;
+}

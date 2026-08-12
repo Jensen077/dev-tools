@@ -69,3 +69,10 @@
 - **现象**：网页版 `invoke("xxx")` 调用直接 reject，无报错堆栈，工具内 catch 显示通用错误。
 - **根因**：`@tauri-apps/api/core` 的 `invoke` 依赖 Tauri 注入的 `window.__TAURI_INTERNALS__`；纯浏览器（含 GitHub Pages 静态托管）无此全局，invoke 在调用时抛 `__TAURI_INTERNALS__...` 错误（import 本身不报错）。
 - **对策**：`backend.ts` 的 `isDesktop()` 检测 `"__TAURI_INTERNALS__" in window`，桌面走 `invoke`、网页走 `jsImpls`；`isDesktop()` 守卫在调用前分支，确保浏览器永不进入 invoke 路径。curl 等无 JS 等价的命令网页版禁用按钮 + 提示，不进 backend。
+
+## Monaco diff 编辑器卸载时的 console 噪音错误
+
+- **现象**：文本比对切换布局（左右/仅对比/上下）时 console 报 `Error: TextModel got disposed before DiffEditorWidget model got reset`，无任何 UI 影响。
+- **根因**：@monaco-editor/react 卸载 DiffEditor 时先 dispose model 再 reset widget 的顺序问题（Monaco 0.56 已知噪音），非业务代码缺陷；仅在组件卸载（布局切换）时触发，与是否使用 sideHeaders 无关（inline→stacked 不经 header 也报错）。
+- **对策**：忽略，不修。排查布局切换相关问题时先把此错误排除，别误当回归。TextDiffEditor 卸载时正常清理 subRef/ResizeObserver/editorRef 即可。
+

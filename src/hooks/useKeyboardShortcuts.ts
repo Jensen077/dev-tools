@@ -20,6 +20,25 @@ export function useKeyboardShortcuts(setCmdOpen: (open: boolean) => void): void 
 
       if (!isMod(e)) return;
 
+      // 文本比对：上下切换变更块（⌘↑/⌘↓，按钮带 data-hotkey="diff-prev"/"diff-next"）
+      if (e.key === "ArrowUp") {
+        const el = document.querySelector<HTMLElement>('[data-hotkey="diff-prev"]');
+        if (el && !el.hasAttribute("disabled")) {
+          el.click();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        const el = document.querySelector<HTMLElement>('[data-hotkey="diff-next"]');
+        if (el && !el.hasAttribute("disabled")) {
+          el.click();
+          e.preventDefault();
+        }
+        return;
+      }
+
       if (e.key >= "1" && e.key <= "9") {
         const idx = Number(e.key) - 1;
         const ordered = useSettingsStore

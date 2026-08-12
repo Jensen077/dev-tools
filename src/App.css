@@ -631,3 +631,10 @@ input[type="checkbox"] {
     display: none;
   }
 }
+
+/* 扁平化：去掉 Monaco 并排 diff 两侧 pane 的内缝阴影（设计契约：除浮层外不加投影）。
+   相同文本时这道 rgb(221,221,221) 阴影最显眼，会被误认为灰色遮罩 */
+.monaco-diff-editor .editor.original,
+.monaco-diff-editor .editor.modified {
+  box-shadow: none !important;
+}

@@ -47,3 +47,31 @@
 .resize-handle:active::after {
   background: var(--accent);
 }
+
+/* 竖向分栏（direction="column"）：分隔条横置，row-resize */
+.resizable-split.vertical {
+  flex-direction: column;
+}
+
+.resizable-split.vertical .resize-handle {
+  width: auto;
+  height: 8px;
+  cursor: row-resize;
+}
+
+.resizable-split.vertical .resize-handle::after {
+  left: 50%;
+  top: 3px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+}
+
+.resizable-split.vertical .resize-handle:hover::after,
+.resizable-split.vertical .resize-handle:active::after {
+  opacity: 1;
+}
+
+.resizable-split.vertical .resize-handle:active::after {
+  background: var(--accent);
+}
