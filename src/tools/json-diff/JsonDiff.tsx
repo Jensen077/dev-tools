@@ -49,36 +49,42 @@ export function JsonDiff() {
   const diffRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   const addHistory = useHistoryStore((s) => s.addHistory);
 
-  // 历史「加载」回填输入
+  // 历史「加载」回填输入，并直接用传入值触发比对（不依赖 state 更新时序）
   useApplyHistory("json-diff", ({ left, right }) => {
     if (left !== undefined) setLeft(left);
     if (right !== undefined) setRight(right);
+    if (left !== undefined && right !== undefined) void compare(left, right);
   });
 
-  const compare = useCallback(async () => {
-    if (!left.trim() || !right.trim()) return;
-    setError(null);
-    try {
-      const node = await backend<DiffNode>("compare_json", { left, right });
-      // 用 Rust 的格式化把两边标准化为 pretty JSON，交给 Monaco diff
-      const [lp, rp] = await Promise.all([
-        backend<string>("fmt_json", { input: left, indent: 2 }),
-        backend<string>("fmt_json", { input: right, indent: 2 }),
-      ]);
-      setLeftPretty(lp);
-      setRightPretty(rp);
-      // 收集根节点下的所有变更（跳过根自身，其 path 恒为 `$`）
-      setChanges(node.children.flatMap((c) => flattenChanges(c)));
-      addHistory({
-        toolId: "json-diff",
-        toolName: "JSON 比对",
-        action: "比对",
-        payload: { left, right },
-      });
-    } catch (e) {
-      setError(toParseError(e));
-    }
-  }, [left, right]);
+  const compare = useCallback(
+    async (l?: string, r?: string) => {
+      const a = l ?? left;
+      const b = r ?? right;
+      if (!a.trim() || !b.trim()) return;
+      setError(null);
+      try {
+        const node = await backend<DiffNode>("compare_json", { left: a, right: b });
+        // 用 Rust 的格式化把两边标准化为 pretty JSON，交给 Monaco diff
+        const [lp, rp] = await Promise.all([
+          backend<string>("fmt_json", { input: a, indent: 2 }),
+          backend<string>("fmt_json", { input: b, indent: 2 }),
+        ]);
+        setLeftPretty(lp);
+        setRightPretty(rp);
+        // 收集根节点下的所有变更（跳过根自身，其 path 恒为 `$`）
+        setChanges(node.children.flatMap((c) => flattenChanges(c)));
+        addHistory({
+          toolId: "json-diff",
+          toolName: "JSON 比对",
+          action: "比对",
+          payload: { left: a, right: b },
+        });
+      } catch (e) {
+        setError(toParseError(e));
+      }
+    },
+    [left, right],
+  );
 
   // 路径点击 → 在右侧 diff 编辑器中定位到包含该 key 的行
   const revealPath = useCallback(
@@ -125,7 +131,7 @@ export function JsonDiff() {
   return (
     <div className="tool-page">
       <div className="toolbar">
-        <button className="btn btn-primary" data-hotkey="run" onClick={compare}>
+        <button className="btn btn-primary" data-hotkey="run" onClick={() => compare()}>
           比对
           <span className="btn-hotkey">⌘↩</span>
         </button>
