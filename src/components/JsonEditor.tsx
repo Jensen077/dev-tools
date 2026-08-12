@@ -47,6 +47,10 @@ export function JsonEditor({
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 上一次 Editor 已持有的值：与外部 value 比对，仅在不一致（外部变更）时回写
   const modelValueRef = useRef(value);
+  // 最新外部 value：handleMount 闭包可能滞后于重渲染（@monaco-editor/react 的 onMount 只取首次渲染闭包），
+  // 用 ref 取最新值，避免历史加载等场景把已创建的最新 model 覆盖回旧值/空
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
   // 稳定 options 引用：避免每次按键重渲染都触发 @monaco-editor/react 的 updateOptions effect
   const options = useMemo<editor.IStandaloneEditorConstructionOptions>(
@@ -61,8 +65,8 @@ export function JsonEditor({
 
   const handleMount: OnMount = (ed, monaco) => {
     editorRef.current = ed;
-    // 挂载即用外部值初始化 model（defaultValue 之外的场景，如初始 draft）
-    if (ed.getValue() !== value) ed.setValue(value);
+    // 挂载即用外部最新值初始化 model（defaultValue 之外的场景，如初始 draft / 历史加载）
+    if (ed.getValue() !== valueRef.current) ed.setValue(valueRef.current);
     modelValueRef.current = ed.getValue();
     onMount?.(ed, monaco);
   };
