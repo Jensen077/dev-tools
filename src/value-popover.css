@@ -1,0 +1,90 @@
+/* JSON 输出点击预览浮层：点击 key/value 弹出，展示 value，点击内容复制 */
+
+.value-popover {
+  position: fixed;
+  z-index: 300;
+  max-width: min(480px, calc(100vw - 32px));
+  max-height: 40vh;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  animation: value-popover-in var(--dur-med) var(--ease-out);
+}
+
+.value-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 12px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+
+.value-popover-key {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.value-popover-hint {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.value-popover-body {
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.value-popover-body:hover {
+  background: var(--surface-1);
+}
+
+/* 滚动条贴边、细窄，匹配编辑器内观感 */
+.value-popover-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.value-popover-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-pill);
+}
+
+@keyframes value-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value-popover {
+    animation: none;
+  }
+}

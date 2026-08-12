@@ -1,4 +1,4 @@
-/* JSON 格式化多标签：仿浏览器 tab 的标签栏 + 激活面板 */
+/* JSON 格式化多标签：胶囊标签栏（对齐 .match-tab 范式）+ 激活面板 */
 
 .formatter-tabs {
   display: flex;
@@ -10,14 +10,14 @@
 
 .formatter-tabbar {
   display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  padding: 0 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px 0;
   flex-shrink: 0;
   min-height: 0;
 }
 
-/* 单个标签：上圆角、底边相接激活面板，仿浏览器 tab */
+/* 单个标签：胶囊，激活 Baby Blue 底 + 蓝字（复用 --accent-soft 令牌） */
 .formatter-tab {
   display: inline-flex;
   align-items: center;
@@ -25,27 +25,26 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--muted);
-  padding: 6px 10px 6px 14px;
+  padding: 4px 8px 4px 14px;
   border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--surface-1);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
-  max-width: 180px;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  max-width: 200px;
 }
 
 .formatter-tab:hover {
-  background: var(--surface-2);
+  background: var(--surface-1);
   color: var(--fg);
 }
 
 .formatter-tab.on {
-  background: var(--surface);
-  color: var(--fg);
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent-strong);
   font-weight: 600;
-  border-color: var(--border-strong);
 }
 
 .formatter-tab-name {
@@ -54,16 +53,21 @@
   white-space: nowrap;
 }
 
-/* 关闭按钮：细字号、hover 显形，避免误触切标签 */
+/* 关闭按钮：细字号、hover 显形圆底，避免误触切标签 */
 .formatter-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   color: var(--faint);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
-  padding: 0 2px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
   transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
@@ -73,26 +77,41 @@
   background: var(--hover);
 }
 
+.formatter-tab.on .formatter-tab-close {
+  color: var(--accent-strong);
+}
+
+.formatter-tab.on .formatter-tab-close:hover {
+  color: var(--accent-hover);
+  background: color-mix(in oklab, var(--accent-soft), var(--surface-2) 60%);
+}
+
+/* 新建按钮：虚线胶囊，hover 强调色 */
 .formatter-tab-add {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--muted);
+  padding: 4px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-pill);
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
-  padding: 5px 12px;
   flex-shrink: 0;
-  margin-bottom: 2px;
-  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .formatter-tab-add:hover:not(:disabled) {
-  background: var(--hover);
-  color: var(--fg);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .formatter-tab-add:disabled {
   color: var(--faint);
+  border-color: var(--border-soft);
   cursor: not-allowed;
 }
 

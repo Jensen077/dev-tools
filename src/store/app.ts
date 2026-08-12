@@ -10,7 +10,7 @@ interface AppState {
   setExtractedJson: (json: string) => void;
   theme: Theme;
   toggleTheme: () => void;
-  /** JSON 悬停预览 + 点击复制（json-handle 式）开关 */
+  /** JSON 悬停预览 + 点击弹层（json-handle 式）开关 */
   jsonPreview: boolean;
   setJsonPreview: (on: boolean) => void;
   /** 切换工具时的输入草稿，避免切换丢失未保存内容 */

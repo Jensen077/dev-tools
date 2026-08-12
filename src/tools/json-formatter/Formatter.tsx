@@ -54,6 +54,8 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
   const [error, setError] = useState<ParseError | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const outputEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  // 排队的自动格式化定时器：手动格式化/压缩时清除，避免延迟的 autoRun 覆盖手动结果
+  const autoTimerRef = useRef<number | null>(null);
   const extractedJson = useAppStore((s) => s.extractedJson);
   const setExtractedJson = useAppStore((s) => s.setExtractedJson);
   const addHistory = useHistoryStore((s) => s.addHistory);
@@ -84,6 +86,11 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
   const run = useCallback(
     async (mode: "format" | "minify") => {
       if (!input.trim()) return;
+      // 取消排队的自动格式化，防止延迟的 autoRun 覆盖本次手动结果（如压缩被格式化覆盖）
+      if (autoTimerRef.current !== null) {
+        window.clearTimeout(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
       setError(null);
       try {
         const result =
@@ -121,15 +128,20 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
     }
   }, [input, addHistory]);
 
-  // 粘贴后自动格式化（debounce 600ms，autoRun 关闭时跳过）
+  // 粘贴后自动格式化（debounce 600ms，autoRun 关闭时跳过）；
+  // 定时器 id 存入 ref 供手动 run 取消，避免竞态覆盖
   useEffect(() => {
     if (!autoRun || !input.trim()) return;
-    const t = setTimeout(() => {
+    const t = window.setTimeout(() => {
       backend<string>("fmt_json", { input, indent })
         .then(setOutput)
         .catch((e) => setError(toParseError(e)));
     }, 600);
-    return () => clearTimeout(t);
+    autoTimerRef.current = t;
+    return () => {
+      window.clearTimeout(t);
+      if (autoTimerRef.current === t) autoTimerRef.current = null;
+    };
   }, [input, indent, autoRun]);
 
   const loadFile = useCallback(async (file: File) => {
@@ -155,6 +167,9 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
   const unfoldAll = useCallback(() => {
     outputEditorRef.current?.getAction("editor.unfoldAll")?.run();
   }, []);
+
+  // 单行输出（压缩结果）无物理行可折叠，Monaco 折叠基于行区域，禁用按钮避免无效点击
+  const canFold = output.includes("\n");
 
   return (
     <div className="tool-page">
@@ -214,10 +229,10 @@ export function Formatter({ initialData, onChange }: FormatterProps) {
             <div className="pane-title">
               输出
               <span className="spacer" />
-              <button className="btn btn-sm" onClick={foldAll} disabled={!output}>
+              <button className="btn btn-sm" onClick={foldAll} disabled={!canFold} title={canFold ? "全部闭合" : "单行 JSON 不支持折叠"}>
                 全部闭合
               </button>
-              <button className="btn btn-sm" onClick={unfoldAll} disabled={!output}>
+              <button className="btn btn-sm" onClick={unfoldAll} disabled={!canFold} title={canFold ? "全部展开" : "单行 JSON 不支持折叠"}>
                 全部展开
               </button>
             </div>

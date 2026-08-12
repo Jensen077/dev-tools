@@ -7,6 +7,7 @@ import "monaco-editor/esm/vs/languages/definitions/shell/register.js";
 // codicon 字体的 @font-face 只在 editor.main 链式引入，editor.api 到不了；
 // 缺了它折叠箭头/展开按钮等 codicon 图标全渲染为空字形，这里显式补上
 import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
+import "./value-popover.css";
 import { findKeyAt, scanJsonKeys } from "./utils/jsonHover";
 import { useAppStore } from "./store/app";
 import { useToastStore } from "./store/toast";
@@ -99,14 +100,98 @@ monaco.languages.registerHoverProvider("json", {
   },
 });
 
-// json-handle 式点击复制：只读编辑器（输出侧）点击 key/value 区间即复制该值。
-// 复用同一份扫描缓存，点击处命中失败（如空白/括号）时静默忽略。
+// json-handle 式点击预览：只读编辑器（输出侧）点击 key/value 区间弹出浮层，
+// 展示该 key 的 value（pretty），点击浮层内容或「复制」按钮才复制到剪贴板。
+// 复用同一份扫描缓存；点击处命中失败（如空白/括号）时关闭已有浮层。
+const popupEl = document.createElement("div");
+popupEl.className = "value-popover";
+let popupOpen = false;
+let popupMousedownHandler: ((e: MouseEvent) => void) | null = null;
+
+function closeValuePopover(): void {
+  if (!popupOpen) return;
+  popupOpen = false;
+  popupEl.remove();
+  if (popupMousedownHandler) {
+    document.removeEventListener("mousedown", popupMousedownHandler, true);
+    popupMousedownHandler = null;
+  }
+}
+
+function openValuePopover(x: number, y: number, key: string, raw: string): void {
+  closeValuePopover();
+  let pretty = raw;
+  try {
+    pretty = JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    // 保持原文，不作为浮层失败条件
+  }
+  popupEl.replaceChildren();
+
+  const head = document.createElement("div");
+  head.className = "value-popover-head";
+  const keyEl = document.createElement("span");
+  keyEl.className = "value-popover-key";
+  keyEl.textContent = key;
+  keyEl.title = key;
+  head.appendChild(keyEl);
+  const hint = document.createElement("span");
+  hint.className = "value-popover-hint";
+  hint.textContent = "点击复制";
+  head.appendChild(hint);
+  popupEl.appendChild(head);
+
+  const body = document.createElement("pre");
+  body.className = "value-popover-body";
+  body.textContent = pretty;
+  const copy = () => {
+    navigator.clipboard
+      .writeText(raw)
+      .then(() => {
+        useToastStore.getState().showToast(`已复制 ${key}`);
+        closeValuePopover();
+      })
+      .catch(() => useToastStore.getState().showToast("复制失败", "error"));
+  };
+  body.addEventListener("click", copy);
+  popupEl.appendChild(body);
+
+  document.body.appendChild(popupEl);
+  popupOpen = true;
+
+  // 点击浮层外部任意处（含非编辑器区域）收起；捕获阶段拦截，浮层内部点击不触发
+  popupMousedownHandler = (e: MouseEvent) => {
+    if (!popupEl.contains(e.target as Node)) closeValuePopover();
+  };
+  document.addEventListener("mousedown", popupMousedownHandler, true);
+
+  // 定位：优先点击点右下方，超视口边界时回退到上方/左移
+  const W = popupEl.offsetWidth;
+  const H = popupEl.offsetHeight;
+  let left = x + 14;
+  let top = y + 14;
+  if (left + W > window.innerWidth - 8) left = Math.max(8, x - W - 14);
+  if (top + H > window.innerHeight - 8) top = Math.max(8, y - H - 14);
+  popupEl.style.left = `${left}px`;
+  popupEl.style.top = `${top}px`;
+}
+
 monaco.editor.onDidCreateEditor((ed) => {
   ed.onMouseDown((e) => {
-    if (!useAppStore.getState().jsonPreview) return;
-    if (!ed.getOption(monaco.editor.EditorOption.readOnly)) return;
+    // 输入侧（可编辑）不弹出预览，但点击其上任一位置都应收起已开的浮层
+    if (!ed.getOption(monaco.editor.EditorOption.readOnly)) {
+      closeValuePopover();
+      return;
+    }
+    if (!useAppStore.getState().jsonPreview) {
+      closeValuePopover();
+      return;
+    }
     const pos = e.target.position;
-    if (!pos) return;
+    if (!pos) {
+      closeValuePopover();
+      return;
+    }
     const model = ed.getModel();
     if (!model) return;
     let cached = hoverCache.get(model);
@@ -115,13 +200,17 @@ monaco.editor.onDidCreateEditor((ed) => {
       hoverCache.set(model, cached);
     }
     const span = findKeyAt(cached.spans, model.getOffsetAt(pos));
-    if (!span) return;
+    if (!span) {
+      closeValuePopover();
+      return;
+    }
     const value = model.getValue().slice(span.valueStart, span.valueEnd).trim();
-    navigator.clipboard
-      .writeText(value)
-      .then(() => useToastStore.getState().showToast(`已复制 ${span.key}`))
-      .catch(() => useToastStore.getState().showToast("复制失败", "error"));
+    openValuePopover(e.event.posx, e.event.posy, span.key, value);
   });
+  // 滚动/编辑器内容变化/编辑器销毁（切走工具）时收起浮层，避免定位失真或残留
+  ed.onDidScrollChange(() => closeValuePopover());
+  ed.onDidChangeModelContent(() => closeValuePopover());
+  ed.onDidDispose(() => closeValuePopover());
 });
 
 self.MonacoEnvironment = {

@@ -178,7 +178,7 @@ export function FormatterTabs() {
           </div>
         ))}
         <button
-          className="formatter-tab-add btn btn-sm"
+          className="formatter-tab-add"
           title="新建标签"
           aria-label="新建标签"
           onClick={addTab}

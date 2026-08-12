@@ -205,7 +205,7 @@ export function Settings() {
           checked={jsonPreview}
           onChange={(e) => setJsonPreview(e.target.checked)}
         />
-        悬停预览 JSON 值（点击 key 复制）
+        悬停预览 JSON 值（点击 key 弹出，点击复制）
       </label>
       <div
         className={`settings-list${isDragging ? " dragging" : ""}${suppressAnim ? " no-anim" : ""}`}

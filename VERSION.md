@@ -6,6 +6,15 @@
 
 ## Unreleased
 
+**JSON 格式化多标签样式与输出交互优化**（胶囊标签栏 + 点击弹层预览）
+
+- `formatter-tabs.css` 标签栏改胶囊风格（对齐 `.match-tab` 范式）：标签激活 Baby Blue 底（`--accent-soft`）+ 蓝字，关闭按钮圆形 hover 圆底；「+ 新建」去掉与 `btn btn-sm` 的类冲突，改虚线胶囊 + hover 强调色
+- `monaco-setup.ts` 输出侧点击交互由「点击即复制」改为「点击弹出浮层」：`onMouseDown` 命中 key/value 区间后 `openValuePopover` 在 body 下挂一个 fixed 浮层（模块级单例 `popupEl`），展示 key + pretty value，点击浮层内容才 `navigator.clipboard.writeText` 复制并 toast 关闭；未命中/滚动/内容变化/编辑器销毁时 `closeValuePopover`；点击浮层外任意处（含输入编辑器/非编辑器区域）经 `document` 捕获阶段 mousedown 收起
+- 浮层定位用 Monaco `IMouseEvent.event.posx/posy`（即 `pageX/pageY`，非 clientX/clientY，TS 报错提示），优先右下展开，超视口边界回退到左上；样式在 `src/value-popover.css`（Meta 令牌 + GitHub 代码配色、`prefers-reduced-motion` 关动画）
+- `settings/Settings.tsx` 开关文案更新为「点击 key 弹出，点击复制」；`store/app.ts` 注释同步（jsonPreview 开关同时控制悬停预览与点击弹层）
+- 修复 autoRun 竞态：手动格式化/压缩未清除排队的自动格式化定时器，600ms 后 autoRun 的 `fmt_json` 覆盖手动压缩结果——`autoTimerRef` 记录定时器 id，`run()` 先清除再执行
+- 修复折叠按钮：压缩输出是单行 JSON，Monaco 折叠基于物理行，单行无折叠区域——`canFold = output.includes("\n")` 单行时禁用「全部闭合/展开」并提示
+
 **JSON 格式化多标签**（单窗口多开面板，内容跨重启持久化）
 
 - `src/tools/json-formatter/FormatterTabs.tsx` 新增标签容器：持有 `tabs: Tab[]`（`{id, input, indent, autoRun}`）+ `activeId`，只挂载激活标签的 `<Formatter>`（Monaco 一次一个实例）；标签栏仿浏览器 tab（新建 `+ 新建`/关闭 `×`/点击切换），上限 10、至少保留一个；实例隔离用 `key={tab.id}`
