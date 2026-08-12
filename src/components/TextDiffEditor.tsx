@@ -137,6 +137,9 @@ export function TextDiffEditor({
         readOnly: true,
         renderSideBySide,
         renderOverviewRuler: true,
+        // 布局由组件显式控制：禁止 Monaco 在窄容器下自动切内联视图
+        // （默认 breakpoint 900，分栏宽度不足时 original 编辑器会被压缩到只剩装饰列）
+        useInlineViewWhenSpaceIsLimited: false,
       }}
     />
   );
