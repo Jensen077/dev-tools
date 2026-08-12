@@ -6,7 +6,6 @@ import type { editor } from "monaco-editor";
 import { useAppStore } from "../../store/app";
 import { useApplyHistory, useHistoryStore } from "../../store/history";
 import { useFileDrop } from "../../hooks/useFileDrop";
-import { useSaveDraft } from "../../hooks/useSaveDraft";
 import { ToolHistory } from "../../components/ToolHistory";
 import { ResizableSplit } from "../../components/ResizableSplit";
 import { useToastStore } from "../../store/toast";
@@ -33,19 +32,39 @@ function toParseError(e: unknown): ParseError {
   return { message: errMsg(e), line: 1, column: 1 };
 }
 
-export function Formatter() {
-  const savedDraft = useAppStore((s) => s.drafts["json-formatter"]) as Record<string, unknown> | undefined;
-  const [input, setInput] = useState((savedDraft?.input as string) ?? "");
+/** 单个格式化标签的完整状态，供多标签容器持久化 */
+export interface FormatterData {
+  input: string;
+  indent: number;
+  autoRun: boolean;
+}
+
+interface FormatterProps {
+  /** 初始状态：首次挂载时从标签快照恢复 */
+  initialData?: FormatterData;
+  /** 内容变化上报给容器，用于跨重启持久化 */
+  onChange?: (data: FormatterData) => void;
+}
+
+export function Formatter({ initialData, onChange }: FormatterProps) {
+  const [input, setInput] = useState(initialData?.input ?? "");
+  const [indent, setIndent] = useState(initialData?.indent ?? 2);
+  const [autoRun, setAutoRun] = useState(initialData?.autoRun ?? true);
   const [output, setOutput] = useState("");
-  const [indent, setIndent] = useState((savedDraft?.indent as number) ?? 2);
   const [error, setError] = useState<ParseError | null>(null);
-  const [autoRun, setAutoRun] = useState((savedDraft?.autoRun as boolean) ?? true);
   const fileRef = useRef<HTMLInputElement>(null);
   const outputEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const extractedJson = useAppStore((s) => s.extractedJson);
   const setExtractedJson = useAppStore((s) => s.setExtractedJson);
   const addHistory = useHistoryStore((s) => s.addHistory);
   const showToast = useToastStore((s) => s.showToast);
+
+  // 状态变化实时上报容器（input/indent/autoRun 三者其一变化即触发）
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current?.({ input, indent, autoRun });
+  }, [input, indent, autoRun]);
 
   // 历史「加载」回填输入
   useApplyHistory("json-formatter", ({ input }) => setInput(input ?? ""));
@@ -136,8 +155,6 @@ export function Formatter() {
   const unfoldAll = useCallback(() => {
     outputEditorRef.current?.getAction("editor.unfoldAll")?.run();
   }, []);
-
-  useSaveDraft("json-formatter", { input, indent, autoRun });
 
   return (
     <div className="tool-page">
