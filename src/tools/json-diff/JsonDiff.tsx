@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { backend } from "../../utils/backend";
 import type { editor } from "monaco-editor";
 import { JsonEditor } from "../../components/JsonEditor";
@@ -32,10 +32,77 @@ function flattenChanges(node: DiffNode, out: DiffNode[] = []): DiffNode[] {
   return out;
 }
 
-/** 取 path 末段（如 `$.a.b[0].c` → `c`），用于在 diff 文本中定位行 */
-function lastSegment(path: string): string {
-  const m = path.match(/([^.[\]]+)(?:\[\d+\])*$/);
-  return m?.[1] ?? "";
+/** 把 JSON path（`$.a[3].b`）解析为段序列：对象键或数组索引 */
+function parsePathSegments(path: string): Array<{ key?: string; index?: number }> {
+  const segs: Array<{ key?: string; index?: number }> = [];
+  const rest = path.replace(/^\$\.?/, "");
+  const re = /([^.[\]]+)|\[(\d+)\]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(rest))) {
+    if (m[1] !== undefined) segs.push({ key: m[1] });
+    if (m[2] !== undefined) segs.push({ index: Number(m[2]) });
+  }
+  return segs;
+}
+
+/** 在 pretty JSON 文本中按 path 定位行号（1-based），找不到返回 -1。
+ * 依赖 Rust fmt_json（serde_json to_string_pretty, indent 2）的固定缩进：
+ * 块内元素行缩进比所属块深一级；数组元素结束行以 `}` 开头，需跳过。
+ */
+function findPathLine(pretty: string, path: string): number {
+  const lines = pretty.split("\n");
+  const indentOf = (i: number) => {
+    const m = lines[i]!.match(/^ */);
+    return m ? m[0].length : 0;
+  };
+  const trim = (i: number) => lines[i]!.trim();
+
+  const segs = parsePathSegments(path);
+  if (segs.length === 0) return -1;
+
+  // depth 为当前所在块（对象或数组）的缩进深度；块内元素行缩进 = (depth + 1) * 2
+  let depth = 0;
+  let pos = -1;
+  for (let si = 0; si < segs.length; si++) {
+    const seg = segs[si]!;
+    const targetIndent = (depth + 1) * 2;
+    const isLast = si === segs.length - 1;
+    let found = -1;
+
+    if (seg.key !== undefined) {
+      const key = seg.key;
+      for (let i = pos + 1; i < lines.length; i++) {
+        if (indentOf(i) === targetIndent && trim(i).startsWith(`"${key}"`)) {
+          found = i;
+          break;
+        }
+      }
+      if (found < 0) return -1;
+      if (isLast) return found + 1;
+      const t = trim(found);
+      if (t.endsWith("{") || t.endsWith("[")) depth = indentOf(found) / 2;
+      else return found + 1;
+    } else {
+      const idx = seg.index!;
+      let seen = -1;
+      for (let i = pos + 1; i < lines.length; i++) {
+        if (indentOf(i) === targetIndent && !trim(i).startsWith("}")) {
+          seen++;
+          if (seen === idx) {
+            found = i;
+            break;
+          }
+        }
+      }
+      if (found < 0) return -1;
+      if (isLast) return found + 1;
+      const t = trim(found);
+      if (t.startsWith("{") || t.startsWith("[")) depth = indentOf(found) / 2;
+      else return found + 1;
+    }
+    pos = found;
+  }
+  return -1;
 }
 
 export function JsonDiff() {
@@ -46,65 +113,81 @@ export function JsonDiff() {
   const [leftPretty, setLeftPretty] = useState("");
   const [rightPretty, setRightPretty] = useState("");
   const [error, setError] = useState<ParseError | null>(null);
+  const [hideUnchanged, setHideUnchanged] = useState((savedDraft?.hideUnchanged as boolean) ?? false);
   const diffRef = useRef<editor.IStandaloneDiffEditor | null>(null);
+  const autoTimerRef = useRef<number | null>(null);
   const addHistory = useHistoryStore((s) => s.addHistory);
 
-  // 历史「加载」回填输入，并直接用传入值触发比对（不依赖 state 更新时序）
+  // 历史「加载」回填输入
   useApplyHistory("json-diff", ({ left, right }) => {
     if (left !== undefined) setLeft(left);
     if (right !== undefined) setRight(right);
-    if (left !== undefined && right !== undefined) void compare(left, right);
   });
 
+  // 比对：fromUser=false 为自动触发（不记历史，避免每次输入都产生记录）
   const compare = useCallback(
-    async (l?: string, r?: string) => {
-      const a = l ?? left;
-      const b = r ?? right;
-      if (!a.trim() || !b.trim()) return;
+    async (fromUser = false) => {
+      if (!left.trim() || !right.trim()) return;
       setError(null);
       try {
-        const node = await backend<DiffNode>("compare_json", { left: a, right: b });
+        const node = await backend<DiffNode>("compare_json", { left, right });
         // 用 Rust 的格式化把两边标准化为 pretty JSON，交给 Monaco diff
         const [lp, rp] = await Promise.all([
-          backend<string>("fmt_json", { input: a, indent: 2 }),
-          backend<string>("fmt_json", { input: b, indent: 2 }),
+          backend<string>("fmt_json", { input: left, indent: 2 }),
+          backend<string>("fmt_json", { input: right, indent: 2 }),
         ]);
         setLeftPretty(lp);
         setRightPretty(rp);
         // 收集根节点下的所有变更（跳过根自身，其 path 恒为 `$`）
         setChanges(node.children.flatMap((c) => flattenChanges(c)));
-        addHistory({
-          toolId: "json-diff",
-          toolName: "JSON 比对",
-          action: "比对",
-          payload: { left: a, right: b },
-        });
+        if (fromUser) {
+          addHistory({
+            toolId: "json-diff",
+            toolName: "JSON 比对",
+            action: "比对",
+            payload: { left, right },
+          });
+        }
       } catch (e) {
         setError(toParseError(e));
       }
     },
-    [left, right],
+    [left, right, addHistory],
   );
 
-  // 路径点击 → 在右侧 diff 编辑器中定位到包含该 key 的行
+  // 自动比对：两侧输入就绪后 500ms 防抖触发（保留手动「比对」按钮兜底）
+  useEffect(() => {
+    if (!left.trim() || !right.trim()) return;
+    if (autoTimerRef.current) window.clearTimeout(autoTimerRef.current);
+    autoTimerRef.current = window.setTimeout(() => {
+      void compare(false);
+    }, 500);
+    return () => {
+      if (autoTimerRef.current) window.clearTimeout(autoTimerRef.current);
+    };
+  }, [left, right, compare]);
+
+  // 路径点击 → 按 path 精确定位行：removed 变更只存在于左侧文本，定位 original；
+  // added/modified 定位 modified（diff 改后侧）
   const revealPath = useCallback(
-    (path: string) => {
+    (c: DiffNode) => {
       const ed = diffRef.current;
       if (!ed) return;
-      const key = lastSegment(path);
-      const modifiedEditor = ed.getModifiedEditor();
-      const model = modifiedEditor.getModel();
-      if (!model) return;
-      const lines = rightPretty.split("\n");
-      const idx = lines.findIndex((l) => l.includes(`"${key}"`));
-      if (idx < 0) return;
-      const line = idx + 1;
-      modifiedEditor.revealLineInCenter(line, 0);
-      modifiedEditor.setPosition({ lineNumber: line, column: 1 });
-      modifiedEditor.focus();
+      const isRemoved = c.change === "removed";
+      const target = isRemoved ? ed.getOriginalEditor() : ed.getModifiedEditor();
+      const line = findPathLine(isRemoved ? leftPretty : rightPretty, c.path);
+      if (line < 0) return;
+      target.setPosition({ lineNumber: line, column: 1 });
+      target.revealLineInCenter(line);
+      target.focus();
     },
-    [rightPretty],
+    [leftPretty, rightPretty],
   );
+
+  // IDEA 式上下切换变更块：走 Monaco goToDiff
+  const goChange = useCallback((dir: "next" | "previous") => {
+    diffRef.current?.goToDiff(dir);
+  }, []);
 
   const loadLeft = useCallback(async (file: File) => {
     setLeft(await file.text());
@@ -126,33 +209,33 @@ export function JsonDiff() {
     return { added, removed, modified };
   }, [changes]);
 
-  useSaveDraft("json-diff", { left, right });
+  useSaveDraft("json-diff", { left, right, hideUnchanged });
+
+  const hasDiff = !!(leftPretty || rightPretty);
 
   return (
     <div className="tool-page">
       <div className="toolbar">
-        <button className="btn btn-primary" data-hotkey="run" onClick={() => compare()}>
+        <button className="btn btn-primary" data-hotkey="run" onClick={() => void compare(true)}>
           比对
           <span className="btn-hotkey">⌘↩</span>
         </button>
+        <label className="tool-toggle" title="折叠未变更区域，只看差异">
+          <input type="checkbox" checked={hideUnchanged} onChange={(e) => setHideUnchanged(e.target.checked)} />
+          只看变更
+        </label>
         <span className="hint">
           变更 {changes.length}（新增 {summary.added} / 删除 {summary.removed} / 修改 {summary.modified}）
         </span>
         <span className="spacer" />
-        <button className="btn" onClick={() => leftFileRef.current?.click()}>打开左值文件</button>
-        <button className="btn" onClick={() => rightFileRef.current?.click()}>打开右值文件</button>
-        <input
-          ref={leftFileRef}
-          type="file"
-          hidden
-          onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setLeft)}
-        />
-        <input
-          ref={rightFileRef}
-          type="file"
-          hidden
-          onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setRight)}
-        />
+        <button className="btn" data-hotkey="diff-prev" onClick={() => goChange("previous")} disabled={!hasDiff}>
+          上一个变更
+          <span className="btn-hotkey">⌘↑</span>
+        </button>
+        <button className="btn" data-hotkey="diff-next" onClick={() => goChange("next")} disabled={!hasDiff}>
+          下一个变更
+          <span className="btn-hotkey">⌘↓</span>
+        </button>
         <ToolHistory toolId="json-diff" />
       </div>
       {error && (
@@ -160,10 +243,28 @@ export function JsonDiff() {
           解析失败: {error.message}（第 {error.line} 行，第 {error.column} 列）
         </div>
       )}
+      <input
+        ref={leftFileRef}
+        type="file"
+        hidden
+        onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setLeft)}
+      />
+      <input
+        ref={rightFileRef}
+        type="file"
+        hidden
+        onChange={(e) => e.target.files?.[0] && e.target.files[0].text().then(setRight)}
+      />
       <ResizableSplit
         left={
           <div className="pane">
-            <div className="pane-title">左值</div>
+            <div className="pane-title">
+              左值
+              <span className="spacer" />
+              <button className="btn btn-sm" onClick={() => leftFileRef.current?.click()}>
+                打开文件
+              </button>
+            </div>
             <div className="drop-zone" {...leftDrop.bindDrop}>
               <JsonEditor value={left} onChange={setLeft} error={error} />
             </div>
@@ -171,7 +272,13 @@ export function JsonDiff() {
         }
         right={
           <div className="pane">
-            <div className="pane-title">右值</div>
+            <div className="pane-title">
+              右值
+              <span className="spacer" />
+              <button className="btn btn-sm" onClick={() => rightFileRef.current?.click()}>
+                打开文件
+              </button>
+            </div>
             <div className="drop-zone" {...rightDrop.bindDrop}>
               <JsonEditor value={right} onChange={setRight} />
             </div>
@@ -180,11 +287,17 @@ export function JsonDiff() {
       />
       <ResizableSplit
         style={{ flex: 2 }}
+        defaultRatio={0.72}
         left={
           <div className="pane">
             <div className="pane-title">diff 视图（标准化后）</div>
-            {leftPretty || rightPretty ? (
-              <TextDiffEditor original={leftPretty} modified={rightPretty} editorRef={diffRef} />
+            {hasDiff ? (
+              <TextDiffEditor
+                original={leftPretty}
+                modified={rightPretty}
+                editorRef={diffRef}
+                hideUnchanged={hideUnchanged}
+              />
             ) : (
               <div className="empty-state">
                 <span className="empty-icon">🔍</span>
@@ -204,7 +317,7 @@ export function JsonDiff() {
             ) : (
               <div className="path-list">
                 {changes.map((c, i) => (
-                  <div key={i} className="path-item" onClick={() => revealPath(c.path)} title={c.path}>
+                  <div key={i} className="path-item" onClick={() => revealPath(c)} title={c.path}>
                     <span className={`badge badge-${c.change}`}>{c.change}</span>
                     <span className="path-text">{c.path}</span>
                   </div>

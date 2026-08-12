@@ -42,6 +42,20 @@
   outline: none;
 }
 
+/* 工具栏复选框开关（如 JSON 比对「只看变更」） */
+.tool-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tool-toggle input {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* 分段控件（如 JSON 缩进 2/4）：iOS 风格，扁平干净 */
 .seg-wrap {
   display: inline-flex;

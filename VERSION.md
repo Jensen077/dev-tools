@@ -6,6 +6,13 @@
 
 ## Unreleased
 
+**JSON 比对交互优化**（自动比对 + 只看变更 + 导航 + 精确路径定位）
+
+- `JsonDiff.tsx` 两侧输入就绪后 500ms 防抖自动比对（`autoTimerRef` + `useEffect`），自动触发不写历史（`compare(fromUser)` 区分，手动「比对」按钮/⌘↩ 才 `addHistory`）
+- 工具栏新增「只看变更」复选框（`.tool-toggle`，`tool.css`）：`TextDiffEditor` 加 `hideUnchanged` prop → Monaco `hideUnchangedRegions: { enabled, contextLineCount: 3, minimumLineCount: 3 }` 折叠未变更区域；状态随 `useSaveDraft` 持久化
+- 工具栏新增「上一个/下一个变更」（`data-hotkey="diff-prev"/"diff-next"`，`goToDiff`），复用全局 ⌘↑/⌘↓ 快捷键
+- 变更路径定位改回 `findPathLine`（按 path 段 + 缩进深度逐层定位行，替换 `lastSegment` 模糊搜 key，大 JSON 下同名 key 不再定位错行；依赖 `fmt_json` indent 2 格式，见 MEMORY.md）；并修复 removed（删除）变更定位不到：删除项只存在于左侧文本，`revealPath` 按 `change` 类型分侧定位——removed 走 original 编辑器 + `leftPretty`，added/modified 走 modified + `rightPretty`，定位顺序改为先 `setPosition` 再 `revealLineInCenter`
+
 **JSON 格式化多标签样式与输出交互优化**（胶囊标签栏 + 点击弹层预览）
 
 - `formatter-tabs.css` 标签栏改胶囊风格（对齐 `.match-tab` 范式）：标签激活 Baby Blue 底（`--accent-soft`）+ 蓝字，关闭按钮圆形 hover 圆底；「+ 新建」去掉与 `btn btn-sm` 的类冲突，改虚线胶囊 + hover 强调色

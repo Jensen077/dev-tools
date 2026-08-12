@@ -18,6 +18,8 @@ interface TextDiffEditorProps {
   onLineChanges?: (changes: editor.ILineChange[] | null) => void;
   /** 并排模式顶部常驻统计行（变更行数 + 总行数）与复制按钮，不随内容滚动 */
   sideHeaders?: boolean;
+  /** 折叠未变更区域，只突出差异（大 JSON 场景聚焦变更） */
+  hideUnchanged?: boolean;
 }
 
 interface SideStats {
@@ -37,6 +39,7 @@ export function TextDiffEditor({
   renderSideBySide = true,
   onLineChanges,
   sideHeaders = false,
+  hideUnchanged = false,
 }: TextDiffEditorProps) {
   const theme = useAppStore((s) => s.theme);
   const internalRef = useRef<editor.IStandaloneDiffEditor | null>(null);
@@ -140,6 +143,8 @@ export function TextDiffEditor({
         // 布局由组件显式控制：禁止 Monaco 在窄容器下自动切内联视图
         // （默认 breakpoint 900，分栏宽度不足时 original 编辑器会被压缩到只剩装饰列）
         useInlineViewWhenSpaceIsLimited: false,
+        // 只看变更：折叠未变更区域，上下文 3 行、变更块 ≥3 行才触发
+        hideUnchangedRegions: { enabled: hideUnchanged, contextLineCount: 3, minimumLineCount: 3 },
       }}
     />
   );
