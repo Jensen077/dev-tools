@@ -36,8 +36,7 @@
 ## Formatter.tsx 改造（受控化，改动最小化）
 
 新增 props：
-- `tabId: string` — 标签标识（当前仅用于潜在的多实例区分，预留）
-- `initialData?: { input: string; indent: number; autoRun: boolean }` — 初始值
+- `initialData?: { input: string; indent: number; autoRun: boolean }` — 初始值（实例隔离由容器 `key={tab.id}` 实现，无需 tabId prop）
 - `onChange?: (d: { input: string; indent: number; autoRun: boolean }) => void` — 内容上报
 
 改动点：

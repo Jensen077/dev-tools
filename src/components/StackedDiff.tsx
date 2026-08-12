@@ -9,6 +9,8 @@ import "./stacked-diff.css";
 
 export interface StackedDiffHandle {
   goChange: (dir: "next" | "previous") => void;
+  /** 定位改后文本编辑器到指定行（供外部按 key 定位，JSON 比对路径列表用） */
+  revealLine: (line: number) => void;
 }
 
 interface StackedDiffProps {
@@ -180,6 +182,13 @@ export function StackedDiff({ original, modified, language = "text", handleRef }
           modEditor.revealLineInCenter(Math.round((c.modifiedStart + c.modifiedEnd) / 2), 0);
           modEditor.focus();
         }
+      },
+      revealLine: (line) => {
+        const modEditor = modEditorRef.current;
+        if (!modEditor) return;
+        modEditor.revealLineInCenter(line, 0);
+        modEditor.setPosition({ lineNumber: line, column: 1 });
+        modEditor.focus();
       },
     };
     return () => {

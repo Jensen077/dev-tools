@@ -6,6 +6,15 @@
 
 ## Unreleased
 
+**JSON 格式化多标签**（单窗口多开面板，内容跨重启持久化）
+
+- `src/tools/json-formatter/FormatterTabs.tsx` 新增标签容器：持有 `tabs: Tab[]`（`{id, input, indent, autoRun}`）+ `activeId`，只挂载激活标签的 `<Formatter>`（Monaco 一次一个实例）；标签栏仿浏览器 tab（新建 `+ 新建`/关闭 `×`/点击切换），上限 10、至少保留一个；实例隔离用 `key={tab.id}`
+- `Formatter.tsx` 受控化：新增 `initialData`（初始值）/`onChange`（内容上报）props，移除 `useSaveDraft` 与 drafts store 依赖；`useState` 初始值改从 `initialData` 取；历史回填（`useApplyHistory`）与日志提取跳转（`extractedJson`）逻辑不变
+- 持久化 localStorage `devbox-json-formatter-tabs`：读 try/catch 防御、非法回落单标签默认，写 debounce 400ms + 组件卸载时补写一次（避免切走工具丢最后改动）；标签 id 用 `crypto.getRandomValues` 自实现 UUID v4
+- `src/tools/index.tsx` 的 `json-formatter` 组件换为 `FormatterTabs`（工具 id 不变，侧边栏/快捷键/历史筛选零影响）
+- `src/tools/json-formatter/formatter-tabs.css` 新增标签栏样式（`.formatter-tab.on` 复用 `--surface`/`--border-strong` 令牌）
+- 坑：`readTabs` fallback 若返回 `activeId: ""`，首次挂载时 `handleChange` 用空串匹配不到任何 tab，编辑内容永不持久化——fallback 必须把 `activeId` 设为新标签 id
+
 **JSON 编辑器交互增强**（悬停预览/点击复制/折叠控制，codicon 字体修复）
 
 - `src/monaco-setup.ts` 修复 codicon 字体缺失：`@font-face` 只在 `editor.main` 链式引入，本项目用 `editor.api` 到不了，折叠箭头/展开按钮等 codicon 图标一直空字形；显式 import `codicon.css` 补上（产出 `dist/assets/codicon-*.ttf`）
@@ -15,6 +24,15 @@
 - 设置页新增「悬停预览 JSON 值」开关（`src/store/app.ts` 加 `jsonPreview`，持久化 `devbox-json-preview`），关闭时 hover 与点击复制均停用
 - JSON 格式化输出 pane 标题栏新增「全部闭合/全部展开」按钮（`editor.foldAll`/`editor.unfoldAll`），`JsonOutput` 透传 `editorRef`；`.pane-title` 改 flex 支持右侧按钮
 - 坑：`jsonHover.ts` DEV 自检断言 `findKeyAt(spans, 0)` 期望命中首个 key，但偏移 0 是 `{` 不在任何 key 区间，DEV 模式抛错导致白屏；改为断言 `keyA.keyStart`
+
+**JSON 比对移植文本对比的交互增强**（布局切换/变更导航/统计头/精确路径定位）
+
+- `src/tools/json-diff/JsonDiff.tsx` 增加三种 diff 布局（左右/上下/仅对比），复用文本对比的 `LAYOUTS` + `.seg` 分段控件；仅「左右」显示输入框，上下/仅对比全宽展示 diff + 变更路径列表；布局随 `useSaveDraft` 持久化
+- 「上一个/下一个变更」按钮（`data-hotkey="diff-prev"/"diff-next"`，⌘↑/⌘↓ 全局快捷键已注册）：上下布局走 `StackedDiffHandle.goChange`，左右/仅对比走 Monaco `goToDiff`
+- 并排 diff 开启 `sideHeaders`（顶部常驻「变更 −N/+N · 总 M 行」+ 复制，不随内容滚动）
+- 输入 pane-title 内嵌「打开文件」按钮（对齐 diffchecker 结构，从 toolbar 移入）
+- `StackedDiff.tsx` 的 `StackedDiffHandle` 新增 `revealLine(line)`（定位改后文本编辑器到指定行）
+- 变更路径点击定位改为 `findPathLine`（按 path 段逐层行走定位行号），修复原 `lastSegment` 只匹配末段 key、大 JSON 下定位到首个同名 key 的问题；依赖 serde_json `to_string_pretty`（indent 2）固定缩进，改 fmt_json 输出格式会破坏定位
 
 ## v1.0.10 — 2026-08-11
 

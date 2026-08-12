@@ -86,7 +86,7 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 ## 约定与陷阱
 
 - `tsconfig` 极严格：`noUncheckedIndexedAccess`/`noUnusedLocals`/`noImplicitReturns`，数组索引访问需非空断言（现有代码用 `order[i]!`）
-- 每个工具组件内 `useSaveDraft(toolId, {...})` 保存草稿、启动时从 `drafts[toolId]` 恢复
+- 每个工具组件内 `useSaveDraft(toolId, {...})` 保存草稿、启动时从 `drafts[toolId]` 恢复。**例外**：JSON 格式化（`json-formatter`）已改为多标签容器（`FormatterTabs.tsx`）——`Formatter` 经 `initialData`/`onChange` 受控化，持久化走 localStorage `devbox-json-formatter-tabs`，不用 `useSaveDraft`
 - 版本号同步维护三处：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`
 - 允许的文件拖拽由 `useFileDrop` 自实现计数方案（Monaco 关了 dropIntoEditor），勿回退到 Monaco 原生拖拽
 - **UI 范式**：遵循 `skills/dev-tools-design/DESIGN.md`（Meta (Store) 风格，仓库内唯一设计契约，改 UI 前必读）

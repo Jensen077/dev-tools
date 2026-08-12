@@ -76,3 +76,9 @@
 - **根因**：@monaco-editor/react 卸载 DiffEditor 时先 dispose model 再 reset widget 的顺序问题（Monaco 0.56 已知噪音），非业务代码缺陷；仅在组件卸载（布局切换）时触发，与是否使用 sideHeaders 无关（inline→stacked 不经 header 也报错）。
 - **对策**：忽略，不修。排查布局切换相关问题时先把此错误排除，别误当回归。TextDiffEditor 卸载时正常清理 subRef/ResizeObserver/editorRef 即可。
 
+## JSON 比对路径定位依赖 fmt_json 的缩进格式
+
+- **现象**：变更路径列表点击定位，大 JSON 下总是跳到首个同名 key 的行（如 `$.items[3].name` 定位到 item0 的 name）。
+- **根因**：原 `lastSegment(path)` 只取末段 key，用 `findIndex` 匹配包含 `"key"` 的行；pretty JSON 中同名 key 出现多次，命中首个。
+- **对策**：`findPathLine`（`JsonDiff.tsx`）按 path 段（对象键/数组索引）在 pretty 文本中逐层行走，用缩进深度（serde_json `to_string_pretty` indent 2）确定层级，数组段跳过以 `}` 开头的元素结束行（`},`/`}`）。**若改 `fmt_json` 的输出缩进或格式，此函数需同步调整**。
+
