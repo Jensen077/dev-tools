@@ -4,9 +4,17 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## Unreleased
+## v1.0.13 — 2026-08-13
 
-**CI：Release 产物名加平台后缀**（下次发版生效）
+**新增：RSA 密钥生成与加解密工具**（侧边栏「RSA」，id `rsa`，「编码与安全」分组，纯前端零 Rust）
+
+- `src/tools/rsa/Rsa.tsx` 新建工具：密钥生成 + 加密 + 解密三段式布局（生成区上下分栏展示公私钥，加密/解密左右并排），按「新工具三步」注册到 `src/tools/index.tsx` 的 `TOOLS` 数组（`{ id: "rsa", name: "RSA", icon: <ToolIcon name="rsa" />, component: Rsa, cat: "编码与安全" }`）
+- 密钥生成：Web Crypto `crypto.subtle.generateKey({ name: "RSA-OAEP" })`，支持 512/1024/2048 位；公钥导出 SPKI、私钥导出 PKCS#8（均 Base64），生成后自动填入加密（公钥）/解密（私钥）密钥框；生成密钥对写历史（`addHistory`）、草稿走 `useSaveDraft`、`useApplyHistory` 回填
+- 加解密三种密码类型：RSA（无填充）/ RSA/ECB/PKCS1Padding（PKCS1 v1.5）/ RSA/ECB/OAEPWithSHA-1AndMGF1Padding（OAEP），公私钥四个方向均可操作
+- 实现细节：OAEP 走 Web Crypto `encrypt`/`decrypt`（公钥加密/私钥解密）；非标准方向（私钥加密 `m^d mod n`、公钥解密 `c^e mod n`）用 node-forge `forge.jsbn.BigInteger.modPow` 手写 raw RSA，私钥加密补 PKCS1 Type 1 填充、公钥解密去填充
+- 新增依赖 `node-forge` + `@types/node-forge`（纯前端实现，桌面与网页行为一致，无 Rust 命令，无需在 `commands.rs`/`lib.rs` 注册）
+
+**CI：Release 产物名加平台后缀**（本次发版生效）
 
 - `.github/workflows/release.yml` 弃用 `tauri-action` 自动上传（无法干预文件名），改为手动 `pnpm tauri build` → 收集产物到 `artifacts/` 并重命名 → `softprops/action-gh-release` 上传草稿
 - 重命名规则：文件名中的架构段（`_universal`/`_amd64`/`_x64`）替换为平台后缀——macOS `_macos64`、Linux `_linux64`、Windows `_windows64`（如 `devbox_1.0.12_macos64.dmg` / `devbox_1.0.12_windows64-setup.exe`）；`find` 按产物扩展名白名单（dmg/msi/exe/deb/AppImage）过滤，排除 linuxdeploy 与 deb 打包的中间文件
