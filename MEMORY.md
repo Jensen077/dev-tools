@@ -41,6 +41,12 @@
 - **现象**：`package-lock.json` 是遗留物，用 npm 会破坏 `pnpm-lock.yaml` 与源码的一致性。
 - **对策**：一律 `pnpm`；`pnpm-lock.yaml` 与源码同步。
 
+## pnpm 10 的 pnpm-workspace.yaml 会破坏锁 pnpm 9 的 CI
+
+- **现象**：v1.0.13 发版时 release.yml/pages.yml 全部失败，报 `ERROR packages field missing or empty`；根因是 RSA 提交新增了 `pnpm-workspace.yaml`（pnpm 10 的 `allowBuilds` 写法，无 `packages` 字段）。
+- **根因**：CI 用 `pnpm/action-setup@v4` 锁 pnpm 9，pnpm 9 只要存在 `pnpm-workspace.yaml` 就按 workspace 解析并强制要求 `packages` 字段，缺失即报错（`pnpm store path`/`pnpm install` 都挂）。pnpm 10 中 `packages` 可选，所以本地开发无感。
+- **对策**：两个 CI 工作流锁的是 pnpm 9，新增 pnpm 10 专属配置（`allowBuilds`/`onlyBuiltDependencies` 等）时优先复用 `package.json` 的 `pnpm` 字段（pnpm 9/10 都认），不要新建 `pnpm-workspace.yaml`；若必须新建，务必带上 `packages` 字段。改 CI pnpm 版本号前先在本地用 `npx pnpm@9.15.9 store path` 验证 lockfile 兼容。
+
 ## 构建产物路径与静默失败
 
 - `pnpm tauri build` 偶发 `bundle_dmg.sh` 失败（旧 dmg 占用），但 `.app` 已生成，产物：`src-tauri/target/release/bundle/macos/devbox.app`。
