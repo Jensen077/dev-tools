@@ -873,6 +873,114 @@
   border-radius: var(--radius-sm);
 }
 
+/* RSA 工具样式 */
+.text-area {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.text-area:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.text-area::placeholder {
+  color: var(--faint);
+}
+
+/* RSA Tab 切换（无边框） */
+.rsa-tabs {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* RSA 密钥输入行 */
+.rsa-key-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rsa-key-input {
+  flex: 1;
+  min-height: 60px;
+  max-height: 120px;
+}
+
+.rsa-type-toggle {
+  display: inline-flex;
+  gap: 6px;
+}
+
+/* RSA 新布局样式 */
+.rsa-section-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.rsa-label {
+  font-size: 12px;
+  color: var(--faint, #888);
+  margin-bottom: 4px;
+  margin-top: 4px;
+}
+
+/* 密钥生成区的 textarea 缩小 */
+.rsa-page .pane > .text-area {
+  min-height: 120px;
+  max-height: 160px;
+}
+
+.rsa-fixed-area {
+  min-height: 60px;
+  max-height: 80px;
+}
+
+.rsa-key-area {
+  min-height: 50px;
+  max-height: 70px;
+}
+
+.rsa-options-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.rsa-select {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-soft, #ddd);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--surface, #fff);
+  color: var(--fg, #333);
+  outline: none;
+}
+
+/* RSA 页面整体可滚动 */
+.rsa-page {
+  flex-shrink: 0;
+}
+
+/* RSA 加密/解密 pane 内部可滚动 */
+.rsa-page .resizable-split:last-child .pane {
+  overflow-y: auto;
+}
+
 /* 尊重系统减少动态效果偏好 */
 @media (prefers-reduced-motion: reduce) {
   .drop-hint,

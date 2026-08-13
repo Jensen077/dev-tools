@@ -72,6 +72,8 @@ const icons: Record<string, ReactNode> = {
     Ico("jwt", "M8 2l-2 2v3l-3 1.5 1 3.5 3.5-.5L8 13l.5-1.5 3.5.5 1-3.5-3-1.5V4L8 2z M8 7.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"),
 
     Ico("param-convert", "M4 4h3v3H4z M9 4h3v3H9z M4 9h3v3H4z M9 9h3v3H9z M7.5 5.5l1 0 M5.5 7.5l0 1 M9.5 7.5l0 1 M7.5 9.5l1 0"),
+
+    Ico("rsa", "M5 11V5a3 3 0 1 1 6 0v6 M5 8h6 M3 13h10"),
   ]),
 
   ...Object.fromEntries([

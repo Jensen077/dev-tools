@@ -15,6 +15,7 @@ import { CurlRunner } from "./curl-runner/CurlRunner";
 import { ImagePreview } from "./image-preview/ImagePreview";
 import { ParamConvert } from "./param-convert/ParamConvert";
 import { Uuid } from "./uuid/Uuid";
+import { Rsa } from "./rsa/Rsa";
 import { ToolIcon } from "../components/icons";
 
 export interface ToolDef {
@@ -63,4 +64,5 @@ export const TOOLS: ToolDef[] = [
   { id: "jwt", name: "JWT 解析", icon: <ToolIcon name="jwt" />, component: Jwt, cat: "编码与安全" },
   { id: "param-convert", name: "参数转换", icon: <ToolIcon name="param-convert" />, component: ParamConvert, cat: "编码与安全" },
   { id: "uuid", name: "UUID", icon: <ToolIcon name="uuid" />, component: Uuid, cat: "编码与安全" },
+  { id: "rsa", name: "RSA", icon: <ToolIcon name="rsa" />, component: Rsa, cat: "编码与安全" },
 ];

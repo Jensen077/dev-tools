@@ -251,6 +251,40 @@ input[type="checkbox"] {
   display: flex;
 }
 
+/* 工作区：侧边栏右侧的主内容区 */
+.work-area {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.tool-slot {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.tool-stage {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.tool-layer {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* 侧边栏：分组导航，底部固定主题与设置 */
 .sidebar {
   width: 236px;
