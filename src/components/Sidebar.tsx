@@ -1,12 +1,9 @@
-import { TOOLS } from "../tools";
+import { GROUP_ORDER, getDisplayTools } from "../tools";
 import type { ToolDef } from "../tools";
 import { useAppStore } from "../store/app";
 import { useSettingsStore } from "../store/settings";
 
 const SETTINGS_ID = "settings";
-
-/** 侧边栏分组顺序（与工具注册表的 cat 对应） */
-const GROUP_ORDER = ["JSON", "文本", "编码与安全", "通用"];
 
 interface SidebarProps {
   isSettings: boolean;
@@ -43,12 +40,10 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
   const toggleTheme = useAppStore((s) => s.toggleTheme);
   const toolOrder = useSettingsStore((s) => s.order);
 
-  const visibleTools = toolOrder
-    .map((id) => TOOLS.find((t) => t.id === id))
-    .filter((t): t is ToolDef => Boolean(t));
+  const displayTools = getDisplayTools(toolOrder);
 
   const byCat: Record<string, ToolDef[]> = {};
-  for (const t of visibleTools) {
+  for (const t of displayTools) {
     (byCat[t.cat] ??= []).push(t);
   }
 

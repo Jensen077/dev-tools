@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { TOOLS } from "../tools";
+import { getDisplayTools } from "../tools";
 import { useAppStore } from "../store/app";
 import { useSettingsStore } from "../store/settings";
 
@@ -41,10 +41,7 @@ export function useKeyboardShortcuts(setCmdOpen: (open: boolean) => void): void 
 
       if (e.key >= "1" && e.key <= "9") {
         const idx = Number(e.key) - 1;
-        const ordered = useSettingsStore
-          .getState()
-          .order.map((id) => TOOLS.find((t) => t.id === id))
-          .filter((t): t is NonNullable<typeof t> => Boolean(t));
+        const ordered = getDisplayTools(useSettingsStore.getState().order);
         const tool = ordered[idx];
         if (tool) {
           useAppStore.getState().setActiveTool(tool.id);

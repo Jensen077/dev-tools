@@ -26,6 +26,25 @@ export interface ToolDef {
   cat: string;
 }
 
+/** 侧边栏分组顺序（与工具注册表的 cat 对应），也决定 ⌘1-⌘9 快捷键的分配顺序 */
+export const GROUP_ORDER = ["JSON", "文本", "编码与安全", "通用"];
+
+/**
+ * 按侧边栏展示顺序返回工具：先按 GROUP_ORDER 分组，组内保持 settings.order 的相对顺序。
+ * 侧边栏的 ⌘1-⌘9 徽标与 useKeyboardShortcuts 的触发逻辑共用此顺序，保证显示与按下一致。
+ */
+export function getDisplayTools(order: string[]): ToolDef[] {
+  const byId = new Map(TOOLS.map((t) => [t.id, t]));
+  const result: ToolDef[] = [];
+  for (const cat of GROUP_ORDER) {
+    for (const id of order) {
+      const t = byId.get(id);
+      if (t && t.cat === cat) result.push(t);
+    }
+  }
+  return result;
+}
+
 /** 工具注册表：新增工具只需在此追加一项 */
 export const TOOLS: ToolDef[] = [
   { id: "json-formatter", name: "JSON 格式化", icon: <ToolIcon name="json-formatter" />, component: FormatterTabs, cat: "JSON" },

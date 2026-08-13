@@ -4,6 +4,13 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
+## v1.0.12 — 2026-08-13
+
+**修复：侧边栏 ⌘1-⌘9 快捷键显示与触发错位**
+
+- 根因：侧边栏（`Sidebar.tsx`）按分组展示顺序给工具编号 `⌘1-⌘9`，而全局快捷键（`useKeyboardShortcuts.ts`）按 settings 扁平 `order` 数组取工具，两者顺序不一致——默认扁平顺序中 `text-diff`（第 4 位）与分组展示位置不同，导致侧边栏徽标显示「表格导出 ⌘4」按下实际打开「文本比对」等错位
+- 修复：`src/tools/index.tsx` 新增共享函数 `getDisplayTools(order)`（先按 `GROUP_ORDER` 分组、组内保持 settings 顺序）+ 导出 `GROUP_ORDER` 常量；`Sidebar.tsx` 与 `useKeyboardShortcuts.ts` 均改用它，保证徽标显示与按下触发一致，消除顺序定义漂移风险
+
 ## v1.0.11 — 2026-08-12
 
 **修复：JSON 格式化/比对/表格导出/文本比对四工具问题排查**（逐项复现验证）
