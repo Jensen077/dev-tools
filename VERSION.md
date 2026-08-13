@@ -9,7 +9,8 @@
 **CI：Release 产物名加平台后缀**（下次发版生效）
 
 - `.github/workflows/release.yml` 弃用 `tauri-action` 自动上传（无法干预文件名），改为手动 `pnpm tauri build` → 收集产物到 `artifacts/` 并重命名 → `softprops/action-gh-release` 上传草稿
-- 重命名规则：文件名中的架构段（`_universal`/`_amd64`/`_x64`）替换为平台后缀——macOS `_macos64`、Linux `_linux64`、Windows `_windows64`（如 `devbox_1.0.12_macos64.dmg` / `devbox_1.0.12_windows64-setup.exe`）；`find` 排除 `.app` 包目录内部文件，只上传 dmg/tar.gz/msi/exe/deb/AppImage
+- 重命名规则：文件名中的架构段（`_universal`/`_amd64`/`_x64`）替换为平台后缀——macOS `_macos64`、Linux `_linux64`、Windows `_windows64`（如 `devbox_1.0.12_macos64.dmg` / `devbox_1.0.12_windows64-setup.exe`）；`find` 按产物扩展名白名单（dmg/msi/exe/deb/AppImage）过滤，排除 linuxdeploy 与 deb 打包的中间文件
+- 坑：`find bundle -type f` 会把 AppImage/deb 打包时 linuxdeploy 留在 `bundle/appimage/`、`bundle/deb/` 的临时文件（lib*.so、gschema、im-*.so 等）一并上传；macOS 的 `.app.tar.gz` 此前由 tauri-action 自动打包，改手动 build 后不会生成，需用 `tar` 手动把 `.app` 目录打成 tar.gz
 - 各矩阵任务把 `suffix`/`bundle_dir` 放进 matrix；Linux 产物在 `target/release/bundle`、mac universal 在 `target/universal-apple-darwin/release/bundle`
 
 ## v1.0.12 — 2026-08-13

@@ -66,7 +66,7 @@ jobs:
         run: pnpm tauri build ${{ matrix.args }}
 
       # 把产物复制到 artifacts/ 并重命名：架构段（_universal/_amd64/_x64）替换为平台后缀
-      # 排除 .app 应用包目录内部文件（只上传 dmg / tar.gz / msi / exe / deb / AppImage）
+      # 只按最终产物扩展名收集（dmg/msi/exe/deb/AppImage），过滤 linuxdeploy 与 deb 打包的中间文件
       - name: Collect and rename artifacts
         shell: bash
         run: |
@@ -76,7 +76,11 @@ jobs:
             base=$(basename "$f")
             newname=$(printf '%s' "$base" | sed -E "s/_universal/_${{ matrix.suffix }}/; s/_amd64/_${{ matrix.suffix }}/; s/_x64/_${{ matrix.suffix }}/")
             cp "$f" "artifacts/$newname"
-          done < <(find '${{ matrix.bundle_dir }}' -type f ! -path '*/*.app/*')
+          done < <(find '${{ matrix.bundle_dir }}' -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \))
+          # macOS：把 .app 目录打包为 tar.gz（手动 build 不会自动生成，此前由 tauri-action 代劳）
+          if [ -d '${{ matrix.bundle_dir }}/macos/devbox.app' ]; then
+            tar -czf "artifacts/devbox_${{ matrix.suffix }}.app.tar.gz" -C '${{ matrix.bundle_dir }}/macos' devbox.app
+          fi
 
       - uses: softprops/action-gh-release@v2
         env:
