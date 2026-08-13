@@ -14,10 +14,11 @@
 - 实现细节：OAEP 走 Web Crypto `encrypt`/`decrypt`（公钥加密/私钥解密）；非标准方向（私钥加密 `m^d mod n`、公钥解密 `c^e mod n`）用 node-forge `forge.jsbn.BigInteger.modPow` 手写 raw RSA，私钥加密补 PKCS1 Type 1 填充、公钥解密去填充
 - 新增依赖 `node-forge` + `@types/node-forge`（纯前端实现，桌面与网页行为一致，无 Rust 命令，无需在 `commands.rs`/`lib.rs` 注册）
 
-**修复：CI 全挂——删除 pnpm 10 专属的 `pnpm-workspace.yaml`**（pages/release 工作流都锁 pnpm 9）
+**修复：CI 全挂 + 工具链统一——CI 升级到 pnpm 10，`packageManager` 单一版本来源**
 
-- RSA 提交新增的 `pnpm-workspace.yaml` 只有 `allowBuilds`（pnpm 10 写法，无 `packages` 字段），pnpm 9 见该文件即按 workspace 解析并要求 `packages` 字段，`pnpm store path`/`pnpm install --frozen-lockfile` 全挂（`packages field missing or empty`），release.yml 三平台与 pages.yml 全部失败
-- 删除 `pnpm-workspace.yaml`，esbuild 白名单回落到 `package.json` 的 `pnpm.onlyBuiltDependencies`（pnpm 9/10 都认）；本地 `npx pnpm@9.15.9 store path` + `install --frozen-lockfile` 验证通过，详见 MEMORY.md
+- 现象：RSA 提交新增的 `pnpm-workspace.yaml`（pnpm 10 的 `allowBuilds` 写法，无 `packages` 字段）让锁 pnpm 9 的 CI 直接报 `packages field missing or empty`，release.yml 三平台与 pages.yml 全部失败（根因与排查见 MEMORY.md）
+- 根治：CI 不再锁 pnpm 9——`package.json` 加 `"packageManager": "pnpm@10.33.2"`（pnpm 版本单一来源），release.yml / pages.yml 的 `pnpm/action-setup@v4` 去掉 `version: 9` 自动读该字段；恢复 `pnpm-workspace.yaml`（`allowBuilds: esbuild: true`），删除 `package.json` 里已废弃的 `pnpm.onlyBuiltDependencies`
+- 效果：本地与 CI 工具链对齐（本地本就是 pnpm 10.33.2），「版本漂移」故障类消除
 
 **CI：Release 产物名加平台后缀**（本次发版生效）
 

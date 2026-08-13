@@ -41,11 +41,11 @@
 - **现象**：`package-lock.json` 是遗留物，用 npm 会破坏 `pnpm-lock.yaml` 与源码的一致性。
 - **对策**：一律 `pnpm`；`pnpm-lock.yaml` 与源码同步。
 
-## pnpm 10 的 pnpm-workspace.yaml 会破坏锁 pnpm 9 的 CI
+## pnpm 版本必须 CI 与本地对齐（packageManager 单一来源）
 
-- **现象**：v1.0.13 发版时 release.yml/pages.yml 全部失败，报 `ERROR packages field missing or empty`；根因是 RSA 提交新增了 `pnpm-workspace.yaml`（pnpm 10 的 `allowBuilds` 写法，无 `packages` 字段）。
-- **根因**：CI 用 `pnpm/action-setup@v4` 锁 pnpm 9，pnpm 9 只要存在 `pnpm-workspace.yaml` 就按 workspace 解析并强制要求 `packages` 字段，缺失即报错（`pnpm store path`/`pnpm install` 都挂）。pnpm 10 中 `packages` 可选，所以本地开发无感。
-- **对策**：两个 CI 工作流锁的是 pnpm 9，新增 pnpm 10 专属配置（`allowBuilds`/`onlyBuiltDependencies` 等）时优先复用 `package.json` 的 `pnpm` 字段（pnpm 9/10 都认），不要新建 `pnpm-workspace.yaml`；若必须新建，务必带上 `packages` 字段。改 CI pnpm 版本号前先在本地用 `npx pnpm@9.15.9 store path` 验证 lockfile 兼容。
+- **现象**：v1.0.13 发版时 release.yml/pages.yml 全部失败，报 `ERROR packages field missing or empty`。
+- **根因**：本地 pnpm 10（10.33.2）新增了 `pnpm-workspace.yaml`（pnpm 10 的 `allowBuilds` 写法，无 `packages` 字段），而 CI 两个工作流用 `pnpm/action-setup@v4` 锁的是 pnpm 9；pnpm 9 只要存在 `pnpm-workspace.yaml` 就按 workspace 解析并强制要求 `packages` 字段，缺失即报错（`pnpm store path`/`pnpm install --frozen-lockfile` 全挂）。本地无感是因为 pnpm 10 的 `packages` 字段可选。这是「开发机工具链与 CI 漂移」的典型案例——pages 从合并 dev 那刻就红了，直到发版才暴露。
+- **对策**：`package.json` 维护 `"packageManager": "pnpm@10.33.2"` 作为 pnpm 版本**唯一来源**，CI 的 `pnpm/action-setup@v4` **不写 `version`** 自动读该字段——升级 pnpm 只改这一处，杜绝漂移。新工作流一律照此；若临时验证某版本兼容性，先用 `npx pnpm@<ver> store path` 本地测通再改。
 
 ## 构建产物路径与静默失败
 
