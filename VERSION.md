@@ -4,6 +4,14 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
+## Unreleased
+
+**CI：Release 产物名加平台后缀**（下次发版生效）
+
+- `.github/workflows/release.yml` 弃用 `tauri-action` 自动上传（无法干预文件名），改为手动 `pnpm tauri build` → 收集产物到 `artifacts/` 并重命名 → `softprops/action-gh-release` 上传草稿
+- 重命名规则：文件名中的架构段（`_universal`/`_amd64`/`_x64`）替换为平台后缀——macOS `_macos64`、Linux `_linux64`、Windows `_windows64`（如 `devbox_1.0.12_macos64.dmg` / `devbox_1.0.12_windows64-setup.exe`）；`find` 排除 `.app` 包目录内部文件，只上传 dmg/tar.gz/msi/exe/deb/AppImage
+- 各矩阵任务把 `suffix`/`bundle_dir` 放进 matrix；Linux 产物在 `target/release/bundle`、mac universal 在 `target/universal-apple-darwin/release/bundle`
+
 ## v1.0.12 — 2026-08-13
 
 **修复：侧边栏 ⌘1-⌘9 快捷键显示与触发错位**

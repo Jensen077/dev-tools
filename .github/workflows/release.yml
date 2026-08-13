@@ -2,13 +2,14 @@ name: Release
 
 # 推 v* 标签触发：构建 macos(universal)/windows/ubuntu 三平台安装包，挂到该 tag 的草稿 Release
 # 使用：git tag v1.0.7 && git push origin v1.0.7 → CI 构建并创建草稿 Release，审核后点 Publish
+# 产物名带平台后缀：macos64 / windows64 / linux64（替换 Tauri 默认的架构段，便于区分下载）
 on:
   push:
     tags:
       - 'v*'
 
 permissions:
-  contents: write # tauri-action 需创建/编辑 Release
+  contents: write # 创建/编辑 Release 需写权限
 
 jobs:
   build:
@@ -19,12 +20,18 @@ jobs:
           # mac universal：一个 dmg 同时支持 Apple Silicon 与 Intel
           - platform: macos-latest
             args: '--target universal-apple-darwin'
+            bundle_dir: 'src-tauri/target/universal-apple-darwin/release/bundle'
+            suffix: 'macos64'
           # Linux：deb + AppImage
           - platform: ubuntu-22.04
             args: ''
+            bundle_dir: 'src-tauri/target/release/bundle'
+            suffix: 'linux64'
           # Windows：msi + nsis(.exe)
           - platform: windows-latest
             args: ''
+            bundle_dir: 'src-tauri/target/release/bundle'
+            suffix: 'windows64'
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -55,15 +62,31 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build bundles
+        run: pnpm tauri build ${{ matrix.args }}
+
+      # 把产物复制到 artifacts/ 并重命名：架构段（_universal/_amd64/_x64）替换为平台后缀
+      # 排除 .app 应用包目录内部文件（只上传 dmg / tar.gz / msi / exe / deb / AppImage）
+      - name: Collect and rename artifacts
+        shell: bash
+        run: |
+          set -e
+          mkdir -p artifacts
+          while IFS= read -r f; do
+            base=$(basename "$f")
+            newname=$(printf '%s' "$base" | sed -E "s/_universal/_${{ matrix.suffix }}/; s/_amd64/_${{ matrix.suffix }}/; s/_x64/_${{ matrix.suffix }}/")
+            cp "$f" "artifacts/$newname"
+          done < <(find '${{ matrix.bundle_dir }}' -type f ! -path '*/*.app/*')
+
+      - uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Devbox ${{ github.ref_name }}'
-          releaseBody: '见 [VERSION.md](https://github.com/${{ github.repository }}/blob/main/VERSION.md) 的对应版本条目'
-          # 草稿模式：首个矩阵任务创建草稿 Release，后续任务挂资产到同一草稿
+          tag_name: ${{ github.ref_name }}
+          name: 'Devbox ${{ github.ref_name }}'
+          body: '见 [VERSION.md](https://github.com/${{ github.repository }}/blob/main/VERSION.md) 的对应版本条目'
+          # 草稿模式：首个矩阵任务创建草稿 Release，后续任务把资产挂到同一草稿
           # 全部构建完成后，到 Releases 页审核资产 → 点 Publish 发布
-          releaseDraft: true
+          draft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          files: artifacts/*
