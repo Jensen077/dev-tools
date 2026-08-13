@@ -1,5 +1,9 @@
 # devbox 开发者工具箱
 
+![Release](https://img.shields.io/github/v/release/Jensen077/dev-tools)
+![License](https://img.shields.io/github/license/Jensen077/dev-tools)
+![Build](https://img.shields.io/github/actions/workflow/status/Jensen077/dev-tools/pages.yml)
+
 一款面向开发者的桌面工具箱应用，解决日常开发中高频的 JSON 处理、文本比对、日志分析、调试辅助等需求。基于 Tauri 2 + React + TypeScript，macOS 原生体验，体积小、启动快。界面采用 Meta (Store) 风格的「代码前向」设计——发丝边框、高信息密度、默认浅色。
 
 > 同一份前端代码可构建为纯静态网页版部署到 GitHub Pages（见下方「网页版」），桌面端走 Rust 后端，网页端走 JS 降级实现，详见 `src/utils/backend.ts`。
