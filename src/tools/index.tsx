@@ -29,7 +29,7 @@ export interface ToolDef {
 }
 
 /** 侧边栏分组顺序（与工具注册表的 cat 对应），也决定 ⌘1-⌘9 快捷键的分配顺序 */
-export const GROUP_ORDER = ["JSON", "文本", "编码与安全", "通用"];
+export const GROUP_ORDER = ["常用", "JSON", "文本", "编码与安全", "通用"];
 
 /**
  * 按侧边栏展示顺序返回工具：先按 GROUP_ORDER 分组，组内保持 settings.order 的相对顺序。
