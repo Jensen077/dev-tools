@@ -88,3 +88,9 @@
 - **根因**：原 `lastSegment(path)` 只取末段 key，用 `findIndex` 匹配包含 `"key"` 的行；pretty JSON 中同名 key 出现多次，命中首个。
 - **对策**：`findPathLine`（`JsonDiff.tsx`）按 path 段（对象键/数组索引）在 pretty 文本中逐层行走，用缩进深度（serde_json `to_string_pretty` indent 2）确定层级，数组段跳过以 `}` 开头的元素结束行（`},`/`}`）。**若改 `fmt_json` 的输出缩进或格式，此函数需同步调整**。
 
+## CSS 规则块残片会静默吞掉后续第一条规则
+
+- **现象**：App.css 中 `.side-footer` 样式无声丢失（无 border-top/内边距，侧边栏底部分隔线消失），浏览器 Console 零报错，且仅这一条规则失效、前后规则均正常。
+- **根因**：改造 `.side-group-label` 为折叠按钮时留下游离残片（两条声明 + 多余的 `}`）。CSS 错误恢复机制把「游离声明序列 + `}`」与下一条规则的选择器（`.side-footer`）拼接为同一个非法 qualified rule 的 prelude，整条丢弃——只吞紧邻其后的一条规则，其余照常解析，故无报错且难以察觉。
+- **对策**：手改 CSS 块时确认花括号配对闭合（删旧块要删干净）；排查「莫名丢一条样式」时先看该规则上游是否有残片，可在 DevTools Console 遍历 `document.styleSheets` 检查目标 selector 是否存在于 cssRules，快速定位被吞规则。
+

@@ -387,48 +387,45 @@ input[type="checkbox"] {
 
 /* 工具按钮包裹（含收藏星标） */
 .tool-btn-wrap {
-  position: relative;
   display: flex;
   align-items: center;
 }
 
 .tool-btn-wrap > .tool-btn {
   flex: 1;
+  min-width: 0;
 }
 
-/* 收藏星标按钮 */
+/* 收藏星标按钮：flex 流内固定占位（visibility 隐藏不塌陷），
+   与快捷键徽标并排永不重叠；hover 该行或已收藏时显示，
+   徽标无需退让（不再覆盖 kbd 位置） */
 .fav-btn {
-  display: none;
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  visibility: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 26px;
+  margin-right: 2px;
   border: none;
   background: none;
   cursor: pointer;
   padding: 2px;
   color: var(--faint, #aaa);
-  z-index: 1;
 }
 
-.tool-btn-wrap:hover > .tool-btn kbd {
-  display: none;
-}
-
-.tool-btn-wrap:hover > .fav-btn {
-  display: inline-flex;
+.tool-btn-wrap:hover > .fav-btn,
+.fav-btn.active {
+  visibility: visible;
 }
 
 .fav-btn.active {
-  display: inline-flex;
   color: #f5a623;
 }
 
 .fav-btn:hover {
   color: #f5a623;
-}
-  padding: 0 12px;
-  margin-bottom: 2px;
 }
 
 .side-footer {
@@ -735,7 +732,8 @@ input[type="checkbox"] {
   }
 
   .tool-btn-label,
-  .tool-btn kbd {
+  .tool-btn kbd,
+  .fav-btn {
     display: none;
   }
 }

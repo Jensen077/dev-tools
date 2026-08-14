@@ -4,6 +4,15 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
+## Unreleased
+
+**修复：侧边栏收藏星标遮挡快捷键徽标 + 徽标编号错位 + footer 样式静默丢失**（三处一起修）
+
+- `src/App.css` 收藏星标布局重构：`.fav-btn` 从绝对定位覆盖（`right:8px` 叠在 kbd 位置、hover 时 `display:none` 替换掉徽标）改为 `.tool-btn-wrap` flex 流内固定 26px 占位 + `visibility` 显隐——隐藏不塌陷、hover 布局零抖动，星标与快捷键徽标并排永不重叠；删除 `.tool-btn-wrap:hover > .tool-btn kbd { display: none }` 规则（收藏行徽标不再消失）；窄屏媒体查询（≤860px）追加隐藏 `.fav-btn`（与 label/kbd 同策略，图标模式不显示星标）
+- `src/components/Sidebar.tsx` 快捷键徽标同源化：徽标分配从「分组渲染顺序累计 startIndex」（收藏引入「常用」分组后重复行参与编号导致整体偏移）改为 `shortcutById` 查表——扁平 `displayTools`（`getDisplayTools(order)`）前 9 个映射 `⌘1-⌘9`，与 `useKeyboardShortcuts` 的取数完全同源；收藏只影响「常用」分组的展示、不改变任何工具的快捷键分配（v1.0.12 同类错位 bug 的回归修复）；顺手删除死代码 `if (cat === "常用") continue;`
+- 修复 App.css 游离 CSS 残片（`.fav-btn:hover` 块后残留 `padding: 0 12px; margin-bottom: 2px; }`）：CSS 错误恢复把残片与下一条规则的选择器拼成同一非法 qualified rule 整条丢弃，导致紧随其后的 `.side-footer` 规则被吞（侧边栏底部分隔线/内边距静默丢失），删除残片后恢复（根因分析见 MEMORY.md）
+- 验证：tsc + vite build 通过；浏览器实测 7 项通过——星标与徽标并排无重叠（间距 12px）、hover 不替换徽标、收藏后徽标保持、Ctrl+N 触发与徽标显示一致（Ctrl+1 → JSON 格式化、Ctrl+5 → 字段提取）、footer 样式恢复、窄屏 760px 图标模式正常、Console 无新增报错
+
 ## v1.0.13 — 2026-08-13
 
 **新增：RSA 密钥生成与加解密工具**（侧边栏「RSA」，id `rsa`，「编码与安全」分组，纯前端零 Rust）

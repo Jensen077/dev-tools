@@ -57,7 +57,15 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
   const favSet = new Set(favorites);
   const favTools = displayTools.filter((t) => favSet.has(t.id));
 
-  const renderTool = (t: ToolDef, shortcut: string | null, isFav: boolean) => (
+  // 快捷键徽标与 useKeyboardShortcuts 完全同源（扁平 getDisplayTools 顺序取前 9）：
+  // 收藏只影响「常用」分组的展示，不改变任何工具的快捷键分配，
+  // 保证徽标显示与按下触发一致（常用分组的重复行不参与编号）
+  const shortcutById = new Map<string, string>();
+  displayTools.forEach((t, i) => {
+    if (i < 9) shortcutById.set(t.id, `⌘${i + 1}`);
+  });
+
+  const renderTool = (t: ToolDef, isFav: boolean) => (
     <div key={t.id} className="tool-btn-wrap">
       <button
         className={`tool-btn ${t.id === activeTool ? "active" : ""}`}
@@ -66,7 +74,7 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
       >
         <span className="tool-icon">{t.icon}</span>
         <span className="tool-btn-label">{t.name}</span>
-        {shortcut && <kbd>{shortcut}</kbd>}
+        {shortcutById.has(t.id) && <kbd>{shortcutById.get(t.id)}</kbd>}
       </button>
       <button
         className={`fav-btn ${isFav ? "active" : ""}`}
@@ -78,8 +86,8 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
     </div>
   );
 
-  // 渲染分组（含折叠）
-  const renderGroup = (cat: string, tools: ToolDef[], k: { n: number }) => {
+  // 渲染分组（含折叠）；徽标按 shortcutById 查表，不受分组/折叠影响
+  const renderGroup = (cat: string, tools: ToolDef[]) => {
     if (tools.length === 0) return null;
     const collapsed = collapsedGroups.includes(cat);
     return (
@@ -92,16 +100,10 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
           <span className={`group-arrow ${collapsed ? "collapsed" : "expanded"}`}>▶</span>
           {cat}
         </div>
-        {!collapsed && tools.map((t) => {
-          const shortcut = k.n < 9 ? `⌘${k.n + 1}` : null;
-          k.n += 1;
-          return renderTool(t, shortcut, favSet.has(t.id));
-        })}
+        {!collapsed && tools.map((t) => renderTool(t, favSet.has(t.id)))}
       </div>
     );
   };
-
-  const k = { n: 0 };
 
   // 构建分组列表（常用在顶部）
   const groups: { cat: string; tools: ToolDef[] }[] = [];
@@ -109,9 +111,10 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
     groups.push({ cat: "常用", tools: favTools });
   }
   for (const cat of GROUP_ORDER) {
-    if (cat === "常用") continue;
     const tools = byCat[cat] ?? [];
-    if (tools.length > 0) groups.push({ cat, tools });
+    if (tools.length > 0) {
+      groups.push({ cat, tools });
+    }
   }
 
   return (
@@ -124,7 +127,7 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
         <kbd>⌘P</kbd>
       </button>
       <div className="side-scroll">
-        {groups.map((g) => renderGroup(g.cat, g.tools, k))}
+        {groups.map((g) => renderGroup(g.cat, g.tools))}
       </div>
       <div className="side-footer">
         <button className="tool-btn" onClick={toggleTheme} title={theme === "dark" ? "切换浅色主题" : "切换深色主题"}>
