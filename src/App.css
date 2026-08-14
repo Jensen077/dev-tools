@@ -353,6 +353,76 @@ input[type="checkbox"] {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--faint);
+  padding: 8px 14px 4px;
+}
+
+/* 分组折叠/展开 */
+.side-group-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.side-group-toggle:hover {
+  color: var(--fg, #333);
+}
+
+.group-arrow {
+  display: inline-block;
+  font-size: 9px;
+  transition: transform 0.2s ease;
+  color: var(--faint, #888);
+}
+
+.group-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.group-arrow.collapsed {
+  transform: rotate(0deg);
+}
+
+/* 工具按钮包裹（含收藏星标） */
+.tool-btn-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tool-btn-wrap > .tool-btn {
+  flex: 1;
+}
+
+/* 收藏星标按钮 */
+.fav-btn {
+  display: none;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+  color: var(--faint, #aaa);
+  z-index: 1;
+}
+
+.tool-btn-wrap:hover > .fav-btn {
+  display: inline-flex;
+}
+
+.fav-btn.active {
+  display: inline-flex;
+  color: #f5a623;
+}
+
+.fav-btn:hover {
+  color: #f5a623;
+}
   padding: 0 12px;
   margin-bottom: 2px;
 }

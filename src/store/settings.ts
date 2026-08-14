@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { TOOLS } from "../tools";
 
 const SETTINGS_KEY = "devbox-tool-config";
+const COLLAPSED_KEY = "devbox-collapsed-groups";
+const FAV_KEY = "devbox-favorites";
 
 interface ToolSettingsState {
   /// 启用的工具 id，按侧边栏显示顺序排列；未出现的即隐藏
@@ -10,6 +12,14 @@ interface ToolSettingsState {
   move: (id: string, dir: -1 | 1) => void;
   reorder: (fromIdx: number, toIdx: number) => void;
   reset: () => void;
+  /// 收起状态为 true，展开为 false
+  collapsedGroups: string[];
+  toggleGroup: (cat: string) => void;
+  isGroupCollapsed: (cat: string) => boolean;
+  /// 收藏的工具 id 列表
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
+  isFavorite: (id: string) => boolean;
 }
 
 /// 防御性清理持久化顺序：过滤未知 id、去重，补入缺失的新工具，并确保历史记录在末位
@@ -61,7 +71,37 @@ function saveOrder(order: string[]) {
   }
 }
 
-export const useSettingsStore = create<ToolSettingsState>((set) => ({
+function readCollapsed(): string[] {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY);
+    if (!raw) return ["JSON", "文本", "编码与安全", "通用"]; // 默认常用展开，其他收起
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((x: unknown) => typeof x === "string") : [];
+  } catch {
+    return ["JSON", "文本", "编码与安全", "通用"];
+  }
+}
+
+function saveCollapsed(groups: string[]) {
+  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(groups)); } catch { /* */ }
+}
+
+function readFavorites(): string[] {
+  try {
+    const raw = localStorage.getItem(FAV_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((x: unknown) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(favs: string[]) {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch { /* */ }
+}
+
+export const useSettingsStore = create<ToolSettingsState>((set, get) => ({
   order: readOrder(),
 
   setEnabled: (id, enabled) =>
@@ -107,4 +147,26 @@ export const useSettingsStore = create<ToolSettingsState>((set) => ({
     saveOrder(order);
     set({ order });
   },
+
+  collapsedGroups: readCollapsed(),
+  toggleGroup: (cat) =>
+    set((s) => {
+      const collapsed = s.collapsedGroups.includes(cat)
+        ? s.collapsedGroups.filter((x) => x !== cat)
+        : [...s.collapsedGroups, cat];
+      saveCollapsed(collapsed);
+      return { collapsedGroups: collapsed };
+    }),
+  isGroupCollapsed: (cat) => get().collapsedGroups.includes(cat),
+
+  favorites: readFavorites(),
+  toggleFavorite: (id) =>
+    set((s) => {
+      const favorites = s.favorites.includes(id)
+        ? s.favorites.filter((x) => x !== id)
+        : [...s.favorites, id];
+      saveFavorites(favorites);
+      return { favorites };
+    }),
+  isFavorite: (id) => get().favorites.includes(id),
 }));

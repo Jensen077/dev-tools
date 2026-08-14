@@ -32,6 +32,8 @@ const ICON_SEARCH = "M8 8m-4.5 0a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0z M11.5 11.5
 const ICON_SUN = "M8 8m-3 0a3 3 0 1 1 6 0 3 3 0 0 1-6 0z M8 2v1M8 13v1M2 8h1M13 8h1M3.5 3.5l.7.7M11.8 11.8l.7.7M12.5 3.5l-.7.7M4.2 11.8l-.7.7";
 const ICON_MOON = "M13.5 9.5A6 6 0 1 1 6.5 2.5 5 5 0 0 0 13.5 9.5z";
 const ICON_GEAR = "M8 8m-2 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0z M8 1.8v1.8M8 12.4v1.8M1.8 8h1.8M12.4 8h1.8M3.6 3.6l1.3 1.3M11.1 11.1l1.3 1.3M12.4 3.6l-1.3 1.3M4.9 11.1l-1.3 1.3";
+const ICON_STAR = "M8 1.5l1.8 4.5 4.7.4-3.6 3.1 1.1 4.6L8 11.8 4 14.1l1.1-4.6L1.5 6.4l4.7-.4z";
+const ICON_STAR_OUTLINE = "M8 1.5l1.8 4.5 4.7.4-3.6 3.1 1.1 4.6L8 11.8 4 14.1l1.1-4.6L1.5 6.4l4.7-.4z";
 
 /** 侧边栏：按分类分组渲染工具列表；顶部搜索、底部固定主题切换与设置 */
 export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
@@ -39,6 +41,10 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
   const theme = useAppStore((s) => s.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
   const toolOrder = useSettingsStore((s) => s.order);
+  const collapsedGroups = useSettingsStore((s) => s.collapsedGroups);
+  const toggleGroup = useSettingsStore((s) => s.toggleGroup);
+  const favorites = useSettingsStore((s) => s.favorites);
+  const toggleFavorite = useSettingsStore((s) => s.toggleFavorite);
 
   const displayTools = getDisplayTools(toolOrder);
 
@@ -47,20 +53,66 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
     (byCat[t.cat] ??= []).push(t);
   }
 
-  const renderTool = (t: ToolDef, shortcut: string | null) => (
-    <button
-      key={t.id}
-      className={`tool-btn ${t.id === activeTool ? "active" : ""}`}
-      onClick={() => onSelect(t.id)}
-      title={t.name}
-    >
-      <span className="tool-icon">{t.icon}</span>
-      <span className="tool-btn-label">{t.name}</span>
-      {shortcut && <kbd>{shortcut}</kbd>}
-    </button>
+  // 常用分组：收藏的工具按 order 顺序
+  const favSet = new Set(favorites);
+  const favTools = displayTools.filter((t) => favSet.has(t.id));
+
+  const renderTool = (t: ToolDef, shortcut: string | null, isFav: boolean) => (
+    <div key={t.id} className="tool-btn-wrap">
+      <button
+        className={`tool-btn ${t.id === activeTool ? "active" : ""}`}
+        onClick={() => onSelect(t.id)}
+        title={t.name}
+      >
+        <span className="tool-icon">{t.icon}</span>
+        <span className="tool-btn-label">{t.name}</span>
+        {shortcut && <kbd>{shortcut}</kbd>}
+      </button>
+      <button
+        className={`fav-btn ${isFav ? "active" : ""}`}
+        onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }}
+        title={isFav ? "取消收藏" : "收藏"}
+      >
+        <Svg d={isFav ? ICON_STAR : ICON_STAR_OUTLINE} width={12} height={12} fill={isFav ? "currentColor" : "none"} />
+      </button>
+    </div>
   );
 
-  let k = 0;
+  // 渲染分组（含折叠）
+  const renderGroup = (cat: string, tools: ToolDef[], k: { n: number }) => {
+    if (tools.length === 0) return null;
+    const collapsed = collapsedGroups.includes(cat);
+    return (
+      <div className="side-group" key={cat}>
+        <div
+          className="side-group-label side-group-toggle"
+          onClick={() => toggleGroup(cat)}
+          title={collapsed ? "展开" : "收起"}
+        >
+          <span className={`group-arrow ${collapsed ? "collapsed" : "expanded"}`}>▶</span>
+          {cat}
+        </div>
+        {!collapsed && tools.map((t) => {
+          const shortcut = k.n < 9 ? `⌘${k.n + 1}` : null;
+          k.n += 1;
+          return renderTool(t, shortcut, favSet.has(t.id));
+        })}
+      </div>
+    );
+  };
+
+  const k = { n: 0 };
+
+  // 构建分组列表（常用在顶部）
+  const groups: { cat: string; tools: ToolDef[] }[] = [];
+  if (favTools.length > 0) {
+    groups.push({ cat: "常用", tools: favTools });
+  }
+  for (const cat of GROUP_ORDER) {
+    if (cat === "常用") continue;
+    const tools = byCat[cat] ?? [];
+    if (tools.length > 0) groups.push({ cat, tools });
+  }
 
   return (
     <aside className="sidebar">
@@ -72,20 +124,7 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
         <kbd>⌘P</kbd>
       </button>
       <div className="side-scroll">
-        {GROUP_ORDER.map((cat) => {
-          const tools = byCat[cat] ?? [];
-          if (tools.length === 0) return null;
-          return (
-            <div className="side-group" key={cat}>
-              <div className="side-group-label">{cat}</div>
-              {tools.map((t) => {
-                const shortcut = k < 9 ? `⌘${k + 1}` : null;
-                k += 1;
-                return renderTool(t, shortcut);
-              })}
-            </div>
-          );
-        })}
+        {groups.map((g) => renderGroup(g.cat, g.tools, k))}
       </div>
       <div className="side-footer">
         <button className="tool-btn" onClick={toggleTheme} title={theme === "dark" ? "切换浅色主题" : "切换深色主题"}>
@@ -106,3 +145,4 @@ export function Sidebar({ isSettings, onSelect, onSearch }: SidebarProps) {
     </aside>
   );
 }
+
