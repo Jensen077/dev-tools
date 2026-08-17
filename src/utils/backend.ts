@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { DiffNode, JsonMatch, ParseError } from "../types";
+import { compareProps as comparePropsJs } from "./props";
 
 /** 是否运行在 Tauri 桌面环境（存在 __TAURI_INTERNALS__ 全局注入）。
  *  浏览器（含 GitHub Pages）无此全局，invoke 调用会抛错，故需走 JS 降级。 */
@@ -302,6 +303,7 @@ const jsImpls: Record<string, (a: Record<string, unknown>) => unknown> = {
   fmt_json: (a) => fmtJson(a.input as string, a.indent as number),
   min_json: (a) => minifyJson(a.input as string),
   compare_json: (a) => compareJson(a.left as string, a.right as string),
+  compare_props: (a) => comparePropsJs(a.left as string, a.right as string),
   extract_json_cmd: (a) => extractJsonCmd(a.input as string),
 };
 

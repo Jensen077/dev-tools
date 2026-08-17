@@ -3,6 +3,7 @@ pub mod curl;
 pub mod diff;
 pub mod extract;
 pub mod format;
+pub mod props;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -15,6 +16,7 @@ pub fn run() {
             commands::fmt_unescape,
             commands::extract_json_cmd,
             commands::compare_json,
+            commands::compare_props,
             commands::run_curl_script_cmd,
             commands::save_text_file,
         ])

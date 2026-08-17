@@ -41,3 +41,24 @@ export interface HttpResult {
   body: string;
   duration_ms: number;
 }
+
+/// 与 Rust 端 KvEntry 对应的类型
+export interface KvEntry {
+  key: string;
+  value: string;
+}
+
+/// 与 Rust 端 KvChange 对应的类型
+export interface KvChange {
+  key: string;
+  change: "added" | "removed" | "modified";
+  left: string | null;
+  right: string | null;
+}
+
+/// 与 Rust 端 CompareResult 对应的类型
+export interface CompareResult {
+  left_entries: KvEntry[];
+  right_entries: KvEntry[];
+  changes: KvChange[];
+}

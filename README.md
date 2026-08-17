@@ -19,6 +19,7 @@
 
 ### 文本与调试
 - **文本比对** — 左右并排 / 上下堆叠 / 仅对比变更三种布局，行级高亮 + 变更统计，⌘↑/⌘↓ 切换变更块
+- **配置文件值比对** — 两侧输入 JSON / .properties / YAML（自动识别/混用），解析为扁平 key→value 后按键比对，展示新增/删除/值修改 key 清单与标准化文本 diff，点击定位到对应行
 - **Curl 执行** — 粘贴 curl 脚本直接执行，展示状态码/响应头/响应体（JSON 自动格式化高亮）
 - **正则测试** — 语法高亮命中、捕获组展开、实时匹配计数
 - **图片预览** — 快速查看图片文件
@@ -83,7 +84,7 @@ pnpm build
 同一套前端代码可零服务端部署到 GitHub Pages：`pnpm build` 产出的 `dist/` 即静态站点。
 
 - **桌面端**：Tauri 环境检测到 `window.__TAURI_INTERNALS__`，JSON 格式化/比对/提取/表格导出走 Rust 命令（`invoke`），curl 调用系统二进制
-- **网页端**：4 个 JSON 命令在浏览器内用 JS 降级实现（与 Rust 返回结构逐字段对齐，对象键按字母序排序以匹配 `serde_json` 默认 BTreeMap 行为）；表格导出改为 `Blob` + `<a download>`；curl 因需调用系统二进制且受 CORS 限制，网页版禁用并提示「请使用桌面版」
+- **网页端**：4 个 JSON 命令在浏览器内用 JS 降级实现（与 Rust 返回结构逐字段对齐，对象键按字母序排序以匹配 `serde_json` 默认 BTreeMap 行为）；配置文件值比对（`compare_props`）由 `src/utils/props.ts` 提供 JS 降级（js-yaml 解析 YAML + 手写 properties 解析器，对齐 Rust `props.rs`）；表格导出改为 `Blob` + `<a download>`；curl 因需调用系统二进制且受 CORS 限制，网页版禁用
 - **部署**：push 到 `main` 触发 `.github/workflows/pages.yml` 自动构建发布；仓库 Settings → Pages → Source 选「GitHub Actions」即可
 
 > 其余工具（时间戳/Hash/JWT/UUID/RSA/编码转换/正则测试/参数转换/图片预览/文本比对/字段提取/历史记录）纯前端实现，桌面与网页行为完全一致。

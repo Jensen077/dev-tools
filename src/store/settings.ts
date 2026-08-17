@@ -5,6 +5,16 @@ const SETTINGS_KEY = "devbox-tool-config";
 const COLLAPSED_KEY = "devbox-collapsed-groups";
 const FAV_KEY = "devbox-favorites";
 
+/// 首次使用时的默认收藏工具
+const DEFAULT_FAVORITES = [
+  "json-formatter",
+  "json-diff",
+  "text-diff",
+  "curl-runner",
+  "log-extractor",
+  "props-diff",
+];
+
 interface ToolSettingsState {
   /// 启用的工具 id，按侧边栏显示顺序排列；未出现的即隐藏
   order: string[];
@@ -89,11 +99,11 @@ function saveCollapsed(groups: string[]) {
 function readFavorites(): string[] {
   try {
     const raw = localStorage.getItem(FAV_KEY);
-    if (!raw) return [];
+    if (!raw) return DEFAULT_FAVORITES;
     const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr.filter((x: unknown) => typeof x === "string") : [];
+    return Array.isArray(arr) ? arr.filter((x: unknown) => typeof x === "string") : DEFAULT_FAVORITES;
   } catch {
-    return [];
+    return DEFAULT_FAVORITES;
   }
 }
 

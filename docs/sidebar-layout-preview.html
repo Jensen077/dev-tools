@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>devbox 侧边栏布局方案预览（拓展工具后）</title>
+<style>
+:root {
+  --bg:#ffffff; --surface-1:#f1f4f7; --surface-2:#f0f2f5;
+  --pane-border:#ced0d4; --border-soft:#dee3e9;
+  --fg:#1c2b33; --fg-strong:#050505; --muted:#65676b; --faint:#8595a4;
+  --accent:#0064e0; --accent-hover:#0143b5; --accent-soft:#e8f3ff; --accent-soft-fg:#0143b5;
+  --shadow-lg:0 12px 28px 0 rgba(0,0,0,0.2),0 2px 4px 0 rgba(0,0,0,0.1);
+  --dur-fast:.15s; --ease:cubic-bezier(0.2,0,0,1);
+  --font:"Optimistic VF",Inter,Helvetica,Arial,"Noto Sans",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+:root[data-theme="dark"]{
+  --bg:#181a1b; --surface-1:#232527; --surface-2:#2b2e30;
+  --pane-border:rgba(255,255,255,0.1); --border-soft:rgba(255,255,255,0.06);
+  --fg:#f0f2f5; --fg-strong:#fff; --muted:#b3bac1; --faint:#7d858d;
+  --accent:#47a5fa; --accent-hover:#66b6ff; --accent-soft:rgba(71,165,250,0.16); --accent-soft-fg:#79bafc;
+  --shadow-lg:0 12px 28px rgba(0,0,0,0.55),0 2px 4px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+body{display:flex;height:100vh;overflow:hidden}
+/* ===== 左侧：模拟侧边栏 ===== */
+.sidebar{width:236px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--pane-border);display:flex;flex-direction:column;min-height:0}
+.search{display:flex;align-items:center;gap:8px;margin:10px 10px 4px;padding:6px 10px;border:none;border-radius:8px;color:var(--faint);font-size:13px;cursor:default;background:var(--surface-1)}
+.search svg{color:var(--faint);flex-shrink:0}
+.search .kbd{margin-left:auto;font-size:11px;color:var(--faint);background:var(--surface-2);border-radius:4px;padding:1px 6px;font-family:var(--mono)}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:2px 0 8px;display:flex;flex-direction:column;gap:12px}
+.group{display:flex;flex-direction:column;gap:1px}
+.group-head{display:flex;align-items:center;gap:6px;padding:0 12px;margin-bottom:2px;cursor:pointer;user-select:none;border:none;background:transparent;color:var(--faint);font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left}
+.group-head .caret{width:10px;height:10px;transition:transform var(--dur-fast) var(--ease);flex-shrink:0;color:var(--faint)}
+.group-head .count{margin-left:auto;font-size:11px;font-weight:400;letter-spacing:0;font-family:var(--mono)}
+.group.collapsed .caret{transform:rotate(-90deg)}
+.group.collapsed .tools{display:none}
+.tools{display:flex;flex-direction:column;gap:1px}
+.tool-btn{position:relative;display:flex;align-items:center;gap:9px;width:100%;padding:7px 12px;border:none;background:transparent;color:var(--fg);font-size:14px;border-radius:0;cursor:pointer;text-align:left;transition:background-color var(--dur-fast) var(--ease)}
+.tool-btn:hover{background:var(--surface-1)}
+.tool-btn.active{background:var(--accent-soft);color:var(--accent-soft-fg);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+.tool-btn .ico{width:18px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted)}
+.tool-btn.active .ico{color:var(--accent-soft-fg)}
+.tool-btn .new{font-size:10px;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 5px;line-height:16px;font-weight:500;margin-left:auto}
+.tool-btn .kbd{margin-left:auto;font-size:11px;color:var(--faint);font-family:var(--mono);font-weight:400}
+.fav-section{border-bottom:1px solid var(--border-soft);padding:4px 0}
+.fav-label{font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--faint);padding:0 12px;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.fav-label .star{color:#9a6700}
+.footer{border-top:1px solid var(--pane-border);padding:4px 0;display:flex;flex-direction:column;gap:1px;background:var(--bg)}
+/* ===== 右侧：说明面板 ===== */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface-1);overflow:auto}
+.main-inner{max-width:760px;margin:0 auto;padding:32px 40px;width:100%}
+.badge{display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.06em;color:var(--accent);background:var(--accent-soft);border-radius:100px;padding:3px 12px;margin-bottom:14px}
+h1{font-size:22px;margin:0 0 6px;color:var(--fg-strong);font-weight:600;letter-spacing:-0.01em}
+.sub{color:var(--muted);font-size:13px;margin:0 0 26px;line-height:1.6}
+.card{background:var(--bg);border:1px solid var(--border-soft);border-radius:20px;padding:20px 22px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--fg-strong);font-weight:600}
+.card p{font-size:13px;line-height:1.65;color:var(--muted);margin:0}
+.card .em{color:var(--accent);font-weight:500}
+ul.notes{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--muted)}
+.divider{height:1px;background:var(--border-soft);margin:18px 0}
+.hint-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.hint-tags span{font-size:12px;color:var(--muted);background:var(--surface-1);border-radius:100px;padding:3px 10px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
+.legend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar"></div>
+<div class="main">
+  <div class="main-inner">
+    <span class="badge">UI 预览 · 拓展工具后的侧边栏布局</span>
+    <h1>方案 A：重划分组（零代码外改动，纯结构调整）</h1>
+    <p class="sub">把 4 个分组细化为 6 个，每个分组保持 3~6 个工具的认知舒适区；<b>新增工具按性质自然归组</b>，不再出现"编码与安全 7 个工具一头重"的失衡。左侧可直接交互体验：点击组头折叠/展开，切换主题查看深浅两态。</p>
+
+    <div class="card">
+      <h2>布局要点</h2>
+      <ul class="notes">
+        <li><span class="em">分组平衡</span>：每组 3~6 个，侧边栏视觉均衡，滚动距离可控</li>
+        <li><span class="em">分类边界清晰</span>：JSON / 数据与日志 / 文本 / 网络与调试 / 编码与转换 / 安全与加密，新工具对号入座</li>
+        <li><span class="em">扩展就绪</span>：左侧标注 <span class="em" style="border:1px solid var(--accent);border-radius:4px;padding:0 5px">新</span> 的是演示用未来工具，验证新工具归组不突兀</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>交互增强（对应方案 B / C，可叠加）</h2>
+      <ul class="notes">
+        <li><b>分组折叠</b>：默认仅展开当前激活工具所在组，工具再多也不长</li>
+        <li><b>⭐ 常用置顶</b>：最常用的 5 个工具固定在搜索框下方，⌘1-⌘9 优先分配给常用区</li>
+        <li><b>新工具智能归位</b>：新增工具自动插入其分组默认位置，而非追加到列表末尾</li>
+      </ul>
+      <div class="hint-tags">
+        <span>折叠状态独立持久化</span><span>常用区可编辑</span><span>不动 settings.order 排序机制</span>
+      </div>
+      <div class="legend" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-soft)">
+        <span><span class="dot" style="background:#e8f3ff;border:1px solid #0064e0"></span>当前激活工具</span>
+        <span><span class="dot" style="background:#f1f4f7"></span>常规工具</span>
+        <span><span class="dot" style="background:#fff;border:1px dashed #ced0d4"></span>未来新增工具</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>技术实现（回到代码）</h2>
+      <ul class="notes">
+        <li><code style="font-family:var(--mono);font-size:12px;background:var(--surface-1);border-radius:4px;padding:1px 5px">src/tools/index.tsx</code> 修改各工具的 <code style="font-family:var(--mono);font-size:12px">cat</code> + <code style="font-family:var(--mono);font-size:12px">GROUP_ORDER</code> 扩为 6 项</li>
+        <li><code style="font-family:var(--mono);font-size:12px">Sidebar.tsx</code> 组头加折叠态（<code style="font-family:var(--mono);font-size:12px">devbox-sidebar-collapsed</code> 持久化）</li>
+        <li>折叠 / 常用区均不侵入现有 <code style="font-family:var(--mono);font-size:12px">settings.order</code>，用户已保存的排序不受影响</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <p style="font-size:12px;color:var(--faint);text-align:center;margin:0">本文件为静态原型，仅演示布局，不含真实工具逻辑 · 可在浏览器直接打开预览</p>
+  </div>
+</div>
+<script>
+/* ===== 图标（1.5px 单线 SVG，遵循设计契约：不用 emoji） ===== */
+const I = {
+  "json-fmt":"M5.5 2.5C4 2.5 3.5 3.4 3.5 4.5c0 1-.4 1.6-1.5 1.7 1.1.2 1.5.8 1.5 1.8 0 1 .5 2 2 2M10.5 2.5c1.5 0 2 .9 2 2 0 1 .4 1.6 1.5 1.7-1.1.2-1.5.8-1.5 1.8 0 1-.5 2-2 2M6.5 4h.01M9.5 5h.01M7 8l2-3",
+  "json-diff":"M2 3h5v10H2zM9 3h5v10H9zM5 6h-1M6 8h-1M5 10h-1M12 6h-1M13 8h-1M12 10h-1",
+  "field":"M2 3h12v10H2zM2 8h12M7 3v10",
+  "table":"M2 3h12v10H2zM2 7h12M6 3v10M10 3v10",
+  "log":"M3 1.5h7l3 3V14.5H3zM10 1.5v3h3M5 8h6M5 10.5h6",
+  "csv":"M2 3h12v10H2zM2 7h12M7 3v10M11 9l-3 2 3 2",
+  "text-diff":"M2 2h6M2 5h4M8 2h6v12H8zM2 8h4M2 11h6M2 14h4",
+  "regex":"M2 4h4M6 2v4M10 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM8.5 12l4-4M10 11.5h4M8.5 13.5h3M8.5 9.5h2",
+  "image":"M2 2.5h12v11H2zM2 11l3.5-3.5 2.5 2.5 2-2 4 4M10.5 6.5a1 1 0 1 0 0 .01",
+  "curl":"M2 2h12v12H2zM6 5.5 3.5 8 6 10.5M10 5.5l2.5 2.5L10 10.5",
+  "http":"M8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2zM8 5.5V8l2 1.5",
+  "ws":"M8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2zM2.5 8h11",
+  "encode":"M8 2v12M2 8l2-2M2 8l2 2M14 8l-2-2M14 8l-2 2",
+  "param":"M4 4h2l-1 1.5L4 4zM12 12h-2l1-1.5 1 1.5zM5 8h6M6.5 8v3M9.5 8v-3",
+  "time":"M8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2zM8 5v3l2 2",
+  "uuid":"M3 3h3v3H3zM10 3h3v3h-3zM3 10h3v3H3zM10 10h3v3h-3zM6 4.5h4M4.5 6v4M11.5 6v4M6 11.5h4",
+  "jwt":"M8 2.5v3M8 10.5v3M2.5 8h3M10.5 8h3M3.6 3.6l2.1 2.1M10.3 10.3l2.1 2.1M12.4 3.6l-2.1 2.1M5.7 10.3l-2.1 2.1",
+  "rsa":"M3 13V9.5A2.5 2.5 0 0 1 5.5 7H8a2.5 2.5 0 0 1 0 5H6v1.5M11 8h.01M12.5 11.5c1.5 0 2.5-1 2.5-2.5S14 6.5 12.5 6.5 10 7.5 10 9s1 2.5 2.5 2.5zM8 10.5v.5",
+  "hash":"M5 2v12M11 2v12M2 5h12M2 11h12",
+  "aes":"M5 8V6a3 3 0 0 1 6 0v2M4.5 8h7v5h-7zM8 10v1.5",
+  "history":"M8 2a6 6 0 1 1-5.2 3M2.5 2v3h3M8 5v3l2.2 1.5",
+  "gear":"M8 8m-2.2 0a2.2 2.2 0 1 1 4.4 0 2.2 2.2 0 0 1-4.4 0zM8 2.2v1.8M8 12v1.8M2.2 8H4M12 8h1.8M3.8 3.8l1.3 1.3M10.9 10.9l1.3 1.3M12.2 3.8l-1.3 1.3M5.1 10.9l-1.3 1.3",
+  "sun":"M8 8m-3 0a3 3 0 1 1 6 0 3 3 0 0 1-6 0zM8 2v1M8 13v1M2 8h1M13 8h1M3.5 3.5l.7.7M11.8 11.8l.7.7M12.5 3.5l-.7.7M4.2 11.8l-.7.7",
+  "moon":"M13.5 9.5A6 6 0 1 1 6.5 2.5 5 5 0 0 0 13.5 9.5z",
+  "search":"M8 8m-4.5 0a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zM11.5 11.5L14 14",
+  "star":"M8 2l1.8 3.7 4.2.6-3 2.9.7 4.1L8 11.5l-3.7 1.8.7-4.1-3-2.9 4.2-.6z"
+};
+const icon = (id, cls) => `<svg class="${cls||''}" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${I[id]}"/></svg>`;
+const caret = `<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></svg>`;
+
+/* ===== 分组数据：重划分组后的方案 ===== */
+/* isNew=true 表示演示用「未来新增」工具 */
+const GROUPS = [
+  { name:"JSON", tools:[
+    {id:"json-formatter", name:"JSON 格式化", ico:"json-fmt", k:1},
+    {id:"json-diff", name:"JSON 比对", ico:"json-diff", k:2},
+    {id:"json-field-extract", name:"字段提取", ico:"field"},
+    {id:"json-table", name:"表格导出", ico:"table"},
+  ]},
+  { name:"数据与日志", tools:[
+    {id:"log-extractor", name:"日志提取", ico:"log", k:3},
+    {id:"csv-convert", name:"CSV/JSONL 转换", ico:"csv", isNew:true},
+  ]},
+  { name:"文本", tools:[
+    {id:"text-diff", name:"文本比对", ico:"text-diff", k:4},
+    {id:"regex-tester", name:"正则测试", ico:"regex"},
+    {id:"image-preview", name:"图片预览", ico:"image"},
+  ]},
+  { name:"网络与调试", tools:[
+    {id:"curl-runner", name:"Curl 执行", ico:"curl", k:5},
+    {id:"http-status", name:"HTTP 状态码速查", ico:"http", isNew:true},
+    {id:"websocket", name:"WebSocket 测试", ico:"ws", isNew:true},
+  ]},
+  { name:"编码与转换", tools:[
+    {id:"encode-convert", name:"编码转换", ico:"encode", k:6},
+    {id:"param-convert", name:"参数转换", ico:"param"},
+    {id:"timestamp", name:"时间戳", ico:"time"},
+    {id:"uuid", name:"UUID", ico:"uuid"},
+  ]},
+  { name:"安全与加密", tools:[
+    {id:"jwt", name:"JWT 解析", ico:"jwt", k:7},
+    {id:"hash", name:"Hash 计算", ico:"hash", k:8},
+    {id:"rsa", name:"RSA 加解密", ico:"rsa", k:9},
+    {id:"aes", name:"AES 加解密", ico:"aes", isNew:true},
+  ]},
+];
+const FAV = ["json-formatter","json-diff","log-extractor","text-diff","curl-runner"];
+
+/* ===== 渲染侧边栏 ===== */
+const byId = {};
+GROUPS.forEach(g => g.tools.forEach(t => byId[t.id]=t));
+
+function toolBtn(t){
+  const fav = FAV.includes(t.id);
+  const k = t.k ? `<kbd class="kbd">⌘${t.k}</kbd>` : "";
+  const newBadge = t.isNew ? `<span class="new">新</span>` : "";
+  return `<button class="tool-btn${fav?' active':''}" data-id="${t.id}" title="${t.name}"><span class="ico">${icon(t.ico)}</span><span>${t.name}</span>${newBadge}${k}</button>`;
+}
+
+function groupHtml(g){
+  const tools = g.tools.map(toolBtn).join("");
+  return `<div class="group${g.name==='JSON'?'':' collapsed'}" data-group="${g.name}">
+    <button class="group-head"><span>${caret}</span>${g.name}<span class="count">${g.tools.length}</span></button>
+    <div class="tools">${tools}</div>
+  </div>`;
+}
+
+document.getElementById("sidebar").innerHTML = `
+  <div class="search">${icon("search")}<span>搜索工具</span><span class="kbd">⌘P</span></div>
+  <div class="fav-section">
+    <div class="fav-label">${icon("star")}常用</div>
+    <div class="tools">${FAV.map(id => toolBtn(byId[id])).join("")}</div>
+  </div>
+  <div class="scroll">${GROUPS.map(groupHtml).join("")}</div>
+  <div class="footer">
+    <button class="tool-btn" id="themeBtn" title="切换主题"><span class="ico"></span><span id="themeLabel">深色主题</span></button>
+    <button class="tool-btn" title="设置"><span class="ico">${icon("gear")}</span><span>设置</span></button>
+  </div>`;
+
+/* 主题切换 */
+const themeBtn = document.getElementById("themeBtn");
+themeBtn.querySelector(".ico").innerHTML = icon("sun");
+document.getElementById("themeLabel").textContent = "切换主题";
+themeBtn.addEventListener("click", () => {
+  const dark = document.documentElement.dataset.theme === "light";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  themeBtn.querySelector(".ico").innerHTML = icon(dark ? "moon" : "sun");
+});
+
+/* 分组折叠 */
+document.querySelectorAll(".group-head").forEach(h => {
+  h.addEventListener("click", () => h.parentElement.classList.toggle("collapsed"));
+});
+
+/* 点击工具切换激活态（演示） */
+document.querySelectorAll(".tool-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".tool-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+  });
+});
+</script>
+</body>
+</html>

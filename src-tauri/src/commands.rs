@@ -2,6 +2,7 @@ use crate::curl::{HttpResult, run_curl_script};
 use crate::diff::{DiffNode, diff_json};
 use crate::extract::{JsonMatch, extract_json};
 use crate::format::{ParseError, format_json, minify_json, unescape_json};
+use crate::props::{CompareResult, compare_kv};
 use serde_json::Value;
 
 /// 格式化 JSON 文本（缩进美化）
@@ -44,6 +45,12 @@ pub async fn compare_json(left: String, right: String) -> Result<DiffNode, Parse
         column: e.column() as usize,
     })?;
     Ok(diff_json(&l, &r))
+}
+
+/// 按键值比对两侧配置（各自可为 .properties 或 YAML，自动识别）
+#[tauri::command]
+pub async fn compare_props(left: String, right: String) -> Result<CompareResult, ParseError> {
+    compare_kv(&left, &right)
 }
 
 /// 直接执行 curl 脚本（调用系统 curl）

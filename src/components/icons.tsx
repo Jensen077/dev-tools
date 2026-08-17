@@ -113,6 +113,17 @@ const icons: Record<string, ReactNode> = {
     ),
 
     IcoG(
+      "props-diff",
+      <>
+        <rect x="2" y="3" width="12" height="10" rx="1" />
+        <line x1="4" y1="6.5" x2="7" y2="6.5" />
+        <line x1="8.5" y1="6.5" x2="11" y2="6.5" />
+        <line x1="4" y1="9.5" x2="12" y2="9.5" />
+        <line x1="4" y1="12" x2="8" y2="12" />
+      </>,
+    ),
+
+    IcoG(
       "json-table",
       <>
         <rect x="2" y="3" width="12" height="10" rx="1" />

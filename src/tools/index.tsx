@@ -3,6 +3,7 @@ import { FormatterTabs } from "./json-formatter/FormatterTabs";
 import { JsonDiff } from "./json-diff/JsonDiff";
 import { LogExtractor } from "./log-extractor/LogExtractor";
 import { TextDiff } from "./text-diff/TextDiff";
+import { PropsDiff } from "./props-diff/PropsDiff";
 import { JsonTable } from "./json-table/JsonTable";
 import { JsonFieldExtract } from "./json-field-extract/JsonFieldExtract";
 import { History } from "./history/History";
@@ -53,6 +54,7 @@ export const TOOLS: ToolDef[] = [
   { id: "json-diff", name: "JSON 比对", icon: <ToolIcon name="json-diff" />, component: JsonDiff, cat: "JSON" },
   { id: "log-extractor", name: "日志提取", icon: <ToolIcon name="log-extractor" />, component: LogExtractor, cat: "JSON" },
   { id: "text-diff", name: "文本比对", icon: <ToolIcon name="text-diff" />, component: TextDiff, cat: "文本" },
+  { id: "props-diff", name: "配置文件值比对", icon: <ToolIcon name="props-diff" />, component: PropsDiff, cat: "文本" },
   { id: "json-table", name: "表格导出", icon: <ToolIcon name="json-table" />, component: JsonTable, cat: "JSON" },
   { id: "json-field-extract", name: "字段提取", icon: <ToolIcon name="json-field-extract" />, component: JsonFieldExtract, cat: "JSON" },
   { id: "history", name: "历史记录", icon: <ToolIcon name="history" />, component: History, cat: "通用" },

@@ -7,7 +7,7 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 - 安装/开发/构建用 `pnpm`（`package-lock.json` 是遗留物，勿用 npm；`pnpm-lock.yaml` 与源码保持一致）
 - `pnpm tauri dev` — 开发模式（前端 1420 端口 strict，Vite 忽略 `src-tauri`）
 - `pnpm build` — `rm -rf dist && tsc && vite build`：前端类型检查 + 构建（会先清空 dist）。**这是前端唯一的验证手段：无 ESLint、无 JS 测试框架、无 `typecheck` 脚本**
-- `cargo test`（在 `src-tauri/` 下）— Rust 逻辑测试（format/extract/diff/curl，curl 端到端测试真实调用系统 curl）
+- `cargo test`（在 `src-tauri/` 下）— Rust 逻辑测试（format/extract/diff/curl/props，curl 端到端测试真实调用系统 curl）
 - `pnpm tauri build` — 产出 `src-tauri/target/release/bundle/macos/devbox.app`（未签名/未公证）
 
 ## CI 与发版
@@ -44,9 +44,9 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 
 ## 架构
 
-- **JSON 等重的逻辑在 Rust 侧**：`src-tauri/src/{format,extract,diff,curl}.rs` 为纯逻辑模块（各有 `#[cfg(test)]`），`commands.rs` 定义 `#[tauri::command]`，新命令必须在 `src-tauri/src/lib.rs` 的 `generate_handler![...]` 注册
+- **JSON 等重的逻辑在 Rust 侧**：`src-tauri/src/{format,extract,diff,curl,props}.rs` 为纯逻辑模块（各有 `#[cfg(test)]`），`commands.rs` 定义 `#[tauri::command]`，新命令必须在 `src-tauri/src/lib.rs` 的 `generate_handler![...]` 注册
 - 前端经 `@tauri-apps/api/core` 的 `invoke` 异步调用；invoke reject 可能是字符串或 Error，工具内用 `errMsg`/`toParseError` 统一提取命中的 `ParseError{message,line,column}`（行列均 1-based）
-- **网页版降级**：`src/utils/backend.ts` 的 `backend<T>(cmd, args)` 统一入口，`isDesktop()` 检测 `window.__TAURI_INTERNALS__`——桌面走 `invoke`（语义零变化），网页走 `jsImpls` 的 JS 实现。4 个 JSON 命令（fmt/min/compare/extract）已移植，返回结构与 Rust 逐字段对齐；`save_text_file` 在 JsonTable 内 `isDesktop()` 分支（网页走 Blob 下载）；`run_curl_script_cmd` 桌面专属，网页禁用按钮+提示。新增 invoke 命令若需网页支持，在 `jsImpls` 注册 JS 实现即可
+- **网页版降级**：`src/utils/backend.ts` 的 `backend<T>(cmd, args)` 统一入口，`isDesktop()` 检测 `window.__TAURI_INTERNALS__`——桌面走 `invoke`（语义零变化），网页走 `jsImpls` 的 JS 实现。4 个 JSON 命令（fmt/min/compare/extract）已移植，配置比对（`compare_props`）由 `src/utils/props.ts` 纯逻辑模块提供 JS 降级；`save_text_file` 在 JsonTable 内 `isDesktop()` 分支（网页走 Blob 下载）；`run_curl_script_cmd` 桌面专属，网页禁用按钮+提示。新增 invoke 命令若需网页支持，在 `jsImpls` 注册 JS 实现即可
 - **新工具三步**：组件放 `src/tools/<name>/`，在 `src/tools/index.tsx` 的 `TOOLS` 数组追加一项（含 id/name/icon/component），侧边栏/快捷键/命令面板自动可见
 - Monaco 本地打包无 CDN：`vite.config.ts` 对其做了 alias/exclude/`inlineDynamicImports` 特殊处理（WKWebView 动态 import 会挂）。**改 vite.config 前先确认与 monaco 无关**；TS 路径映射在 `tsconfig.json`.
 - 状态持久化走 localStorage（`devbox-*` key），读取一律 try/catch 防御并回落默认，写入失败静默忽略——新持久化逻辑照此模式
@@ -60,13 +60,13 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
   - `store/` — zustand 状态：app（主题/当前工具/草稿）、history、settings（工具显隐排序）、toast
   - `utils/` — 纯函数工具：hash（MD5 内联 + SHA Web Crypto）、encoding、base64url、fileEncoding、backend（桌面/网页 invoke 适配层 + JS 降级实现）
   - `tools/` — 工具组件（每工具一个子目录，含 `index.tsx` 注册表与 `tool.css` 通用样式）
-    - `json-formatter/`、`json-diff/`、`log-extractor/`、`text-diff/`、`json-table/`、`json-field-extract/`、`history/`、`curl-runner/`、`image-preview/`、`encode-convert/`、`timestamp/`、`hash/`、`regex-tester/`、`jwt/`、`param-convert/`、`uuid/`
+    - `json-formatter/`、`json-diff/`、`log-extractor/`、`text-diff/`、`props-diff/`、`json-table/`、`json-field-extract/`、`history/`、`curl-runner/`、`image-preview/`、`encode-convert/`、`timestamp/`、`hash/`、`regex-tester/`、`jwt/`、`param-convert/`、`uuid/`
   - `App.tsx` — 应用根组件（标题栏拖拽区、侧边栏、工具交叉渐隐舞台、命令面板）
   - `main.tsx` / `monaco-setup.ts` / `types.ts` — 入口与 Monaco/类型基础
 - `src-tauri/` — Rust 后端
   - `src/` — Rust 代码
     - `commands.rs` — 全部 `#[tauri::command]` 定义
-    - `format.rs` / `extract.rs` / `diff.rs` / `curl.rs` — JSON 格式化/提取/比对、curl 执行的纯逻辑模块（各有 `#[cfg(test)]`）
+    - `format.rs` / `extract.rs` / `diff.rs` / `curl.rs` / `props.rs` — JSON 格式化/提取/比对、curl 执行、配置文件值比对的纯逻辑模块（各有 `#[cfg(test)]`）
     - `lib.rs` — Builder 与 `generate_handler!` 注册（新命令必须在此登记）
     - `main.rs` — 启动入口
   - `capabilities/default.json` — Tauri 权限声明（`core:window:allow-*` 等）

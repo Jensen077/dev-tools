@@ -4,7 +4,24 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## v1.0.14 — 2026-08-17
+## Unreleased
+
+**新增：配置文件值比对工具**（侧边栏「配置文件值比对」，id `props-diff`，「文本」分组）
+
+- `src-tauri/src/props.rs` 新建 Rust 纯逻辑模块（含 `#[cfg(test)]` 20 个测试用例）：`parse_properties` 手写 Java Properties 解析器（注释 `#`/`!`、`=`/`:`/空白三种分隔符、行尾 `\` 续行、转义 `\t\n\r\f\\\uXXXX`、重复 key 后者覆盖）；`parse_side` 自动识别格式——properties 优先（`looks_like_yaml` 仅对明确的 YAML 结构特征（`---`/`...` 文档标记、`- ` 列表、行尾 `:` 嵌套块、带缩进键值行）走 YAML 解析，其余一律按 properties；`flatten_yaml` 递归展平 serde_yaml::Value 树为点号键（`a.b.c`）+ 数组下标（`a[0]`），标量经 `format_number` 移尾零归一；`compare_kv` 两侧 BTreeMap 按键 diff 产出 `Vec<KvChange>`（added/removed/modified）+ `Vec<KvEntry>` 排序键值
+- `src-tauri/commands.rs` 新增 `#[tauri::command] pub async fn compare_props(...)`；`lib.rs` 注册 `pub mod props;` + `commands::compare_props`；`Cargo.toml` 新增依赖 `serde_yaml = "0.9"`
+- 前端 `src/tools/props-diff/PropsDiff.tsx` 仿 `JsonDiff.tsx` 结构：上方 ResizableSplit 左右 `JsonEditor`（`language="text"`）+ 打开文件/拖拽（`.properties/.yml/.yaml/.txt`），工具栏「比对」（`data-hotkey="run"`）/「只看变更」toggle/统计 hint/「上一个/下一个变更」（`data-hotkey="diff-prev"/"diff-next"`，⌘↑/⌘↓）/ToolHistory；下方 ResizableSplit 左 = TextDiffEditor（标准化 `key = 值` 文本，值内控制字符转义保证一 key 一行）+ 右 = 变更 key 清单（badge added/removed/modified），点击定位到对应行（`leftLineMap`/`rightLineMap` 按 key→行号）；500ms 防抖自动比对 + 手动兜底；`useSaveDraft`/`useApplyHistory`/`addHistory` 完备
+- `src/types.ts` 新增 `KvEntry`/`KvChange`/`CompareResult` 接口（逐字段对齐 Rust）；`src/utils/props.ts` 提供 JS 降级实现（`compareProps` 导出，手写 properties 解析器 + `js-yaml` 的 `yamlLoad` 展平，18 项 JS 对 Rust 的 parity 测试通过），`backend.ts` 的 `jsImpls` 注册 `compare_props`；新增依赖 `js-yaml`
+- `src/tools/index.tsx` 追加 `{ id: "props-diff", name: "配置文件值比对", ... }`（追加而非插入，⌘1-⌘9 现有工具编号不变）；`icons.tsx` 新增 `props-diff` 单线 SVG 图标
+- 快捷键影响：新工具追加在「文本」组末尾，sanitize 追加新 id 到持久化顺序末尾，不会挤占 ⌘1-⌘9 已有编号；⌘↩/⌘↑/⌘↓/⌘⇧C 安全（App.tsx 单实例挂载，DOM 至多一个 data-hotkey 元素）
+
+**配置文件值比对支持 JSON 格式**：`props.rs` 新增 `looks_like_json`（首非空白字符 `{`/`[`）/`flatten_json`（镜像 `flatten_yaml`）/`format_json_number`，`parse_side` 检测优先级 JSON → YAML → properties；JS `props.ts` 新增 `looksLikeJson`/`parseJson`（`JSON.parse` + 复用 `flattenYamlValue`）；新增 7 个 Rust 测试（嵌套展平/标量类型/数组根/跨格式对齐/错误报行）；零新依赖
+
+**侧边栏默认收藏**：`src/store/settings.ts` 新增 `DEFAULT_FAVORITES` 常量（json-formatter/json-diff/text-diff/curl-runner/log-extractor/props-diff），`readFavorites` 回落从未收藏改为默认收藏，首次使用即展示常用工具
+
+**侧边栏布局预览**：`docs/sidebar-layout-preview.html` 新增设计稿，预览拓展工具后的侧边栏深浅两套布局
+
+## v1.0.15 — 2026-08-17
 
 **新增：Cron 表达式生成器**（侧边栏「Cron」，id `cron`，「通用」分组，纯前端零 Rust）
 
