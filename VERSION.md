@@ -4,7 +4,17 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## Unreleased
+## v1.0.14 — 2026-08-17
+
+**新增：Cron 表达式生成器**（侧边栏「Cron」，id `cron`，「通用」分组，纯前端零 Rust）
+
+- `src/tools/cron/Cron.tsx` 新建工具：顶部表达式输入框（默认 `* * * * * ?`）+ 复制/执行按钮，「执行」用 `cron-parser`（新增依赖）解析并计算最近 5 次执行时间（`tz: "Asia/Shanghai"`，`zh-CN` 本地化输出），下方「常用表达式例子」22 条点击即填入；按「新工具三步」注册到 `src/tools/index.tsx` 的 `TOOLS` 数组（`{ id: "cron", name: "Cron", icon: <ToolIcon name="cron" />, component: Cron, cat: "通用" }`），`icons.tsx` 新增时钟图标；样式在 `src/tools/tool.css`（`.cron-*` 系列）
+
+**新增：侧边栏分组折叠 + 工具收藏**
+
+- `src/store/settings.ts` 新增两态持久化：`collapsedGroups`（分组收起列表）与 `favorites`（收藏工具 id 列表），各自独立 localStorage key（`devbox-collapsed-groups` / `devbox-favorites`），读写沿用 try/catch 防御 + 静默忽略模式；默认收起 JSON/文本/编码与安全/通用、展开「常用」
+- `src/components/Sidebar.tsx` 分组标题改为可点击折叠按钮（`.side-group-toggle`，箭头 `▶` 随折叠旋转），「常用」分组置顶展示收藏工具（按 settings order 排序）；每行工具右侧新增星标按钮（`.fav-btn`，`.tool-btn-wrap` flex 流内）
+- `src/tools/index.tsx` 的 `GROUP_ORDER` 头部插入 `"常用"`；收藏只影响展示，不改变 `useKeyboardShortcuts` 的扁平快捷键分配
 
 **修复：侧边栏收藏星标遮挡快捷键徽标 + 徽标编号错位 + footer 样式静默丢失**（三处一起修）
 
