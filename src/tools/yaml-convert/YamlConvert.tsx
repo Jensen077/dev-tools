@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { load as yamlLoad, dump as yamlDump } from "js-yaml";
 import { JsonEditor } from "../../components/JsonEditor";
 import { ResizableSplit } from "../../components/ResizableSplit";
@@ -222,6 +222,13 @@ export function YamlConvert() {
 
   useSaveDraft("yaml-convert", { input, outputFormat });
 
+  // 首次输入时输出为空则自动转换
+  useEffect(() => {
+    if (input.trim() && !output) {
+      run();
+    }
+  }, [run, input, output]);
+
   return (
     <div className="tool-page">
       <div className="toolbar">
@@ -247,10 +254,6 @@ export function YamlConvert() {
         </button>
         <button className="btn" onClick={formatInput} disabled={!input} title="美化当前输入内容">
           格式化
-        </button>
-        <button className="btn" data-hotkey="copy" onClick={copy} disabled={!output}>
-          复制结果
-          <span className="btn-hotkey">⇧⌘C</span>
         </button>
         <button className="btn" onClick={swap} disabled={!output} title="将输出作为新输入">
           交换 ⇄
@@ -287,7 +290,7 @@ export function YamlConvert() {
             <div className="pane-title">
               输出
               <span className="spacer" />
-              <button className="btn btn-sm" onClick={copy} disabled={!output}>复制</button>
+              <button className="btn btn-sm" data-hotkey="copy" onClick={copy} disabled={!output}>复制</button>
             </div>
             <JsonEditor value={output} onChange={setOutput} language={formatToLanguage(outputFormat)} />
           </div>
