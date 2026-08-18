@@ -1214,6 +1214,41 @@
   color: var(--fg, #333);
 }
 
+/* YAML 互转 */
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.format-badge .badge {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--divider);
+  flex-shrink: 0;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
 /* 尊重系统减少动态效果偏好 */
 @media (prefers-reduced-motion: reduce) {
   .drop-hint,

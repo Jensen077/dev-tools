@@ -13,6 +13,7 @@ const DEFAULT_FAVORITES = [
   "curl-runner",
   "log-extractor",
   "props-diff",
+  "yaml-convert",
 ];
 
 interface ToolSettingsState {

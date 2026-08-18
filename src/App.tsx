@@ -27,6 +27,17 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // 阻止 Cmd+R 刷新页面，让 Monaco 的查找替换快捷键生效
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "r") {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, []);
+
   // 按配置顺序渲染侧边栏菜单
   const visibleTools = toolOrder
     .map((id) => TOOLS.find((t) => t.id === id))

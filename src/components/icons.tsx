@@ -76,6 +76,8 @@ const icons: Record<string, ReactNode> = {
     Ico("rsa", "M5 11V5a3 3 0 1 1 6 0v6 M5 8h6 M3 13h10"),
 
     Ico("cron", "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4 7h-1.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H16a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5z M12 6V3 M12 21v-3"),
+
+    Ico("yaml-convert", "M3 3h10v4H3z M3 9h10v4H3z M6 5h4 M6 11h4 M10 2l2 2-2 2 M10 12l2 2-2 2"),
   ]),
 
   ...Object.fromEntries([

@@ -224,6 +224,14 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco });
 
+// 自定义快捷键：Cmd+R 打开查找替换面板（替代默认 Cmd+Alt+F）
+monaco.editor.addKeybindingRules([
+  {
+    keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyR,
+    command: "editor.action.startFindReplaceAction",
+  },
+]);
+
 // GitHub 默认主题配色（light / dark），与 App.css 令牌独立
 monaco.editor.defineTheme("devbox-light", {
   base: "vs",

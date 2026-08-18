@@ -107,7 +107,7 @@ function splitKeyValue(line: string): [string, string] | null {
 }
 
 /** 解析 .properties 文本为键值映射（重复 key 后者覆盖；键按字母序返回） */
-function parseProperties(input: string): Map<string, string> {
+export function parseProperties(input: string): Map<string, string> {
   const map = new Map<string, string>();
   let logical = "";
   let inLine = false;
@@ -134,7 +134,7 @@ function parseProperties(input: string): Map<string, string> {
 
 /** 文本是否带明确的 YAML 结构特征（用于决定走 YAML 解析还是回落 properties）。
  *  properties 的常规形态（`=` 分隔、单层 `key: value`）不会命中这些特征。 */
-function looksLikeYaml(input: string): boolean {
+export function looksLikeYaml(input: string): boolean {
   let prev: string | null = null;
   for (const raw of input.split("\n")) {
     const t = raw.trimStart();
@@ -159,7 +159,7 @@ function scalarToString(v: unknown): string {
 }
 
 /** 递归展平 YAML 值树为扁平 key → value（对齐 flatten_yaml） */
-function flattenYamlValue(v: unknown, prefix: string, out: Map<string, string>): void {
+export function flattenYamlValue(v: unknown, prefix: string, out: Map<string, string>): void {
   if (v !== null && typeof v === "object" && !Array.isArray(v)) {
     for (const [k, val] of Object.entries(v)) {
       const path = prefix ? `${prefix}.${k}` : k;
@@ -185,7 +185,7 @@ function flattenYamlValue(v: unknown, prefix: string, out: Map<string, string>):
 }
 
 /** 文本首非空白字符是否为 `{` 或 `[`（JSON 格式） */
-function looksLikeJson(input: string): boolean {
+export function looksLikeJson(input: string): boolean {
   const t = input.trimStart();
   return t.startsWith("{") || t.startsWith("[");
 }

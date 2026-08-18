@@ -18,6 +18,7 @@ import { ParamConvert } from "./param-convert/ParamConvert";
 import { Uuid } from "./uuid/Uuid";
 import { Rsa } from "./rsa/Rsa";
 import { Cron } from "./cron/Cron";
+import { YamlConvert } from "./yaml-convert/YamlConvert";
 import { ToolIcon } from "../components/icons";
 
 export interface ToolDef {
@@ -69,4 +70,5 @@ export const TOOLS: ToolDef[] = [
   { id: "uuid", name: "UUID", icon: <ToolIcon name="uuid" />, component: Uuid, cat: "编码与安全" },
   { id: "rsa", name: "RSA", icon: <ToolIcon name="rsa" />, component: Rsa, cat: "编码与安全" },
   { id: "cron", name: "Cron", icon: <ToolIcon name="cron" />, component: Cron, cat: "通用" },
+  { id: "yaml-convert", name: "YAML 互转", icon: <ToolIcon name="yaml-convert" />, component: YamlConvert, cat: "JSON" },
 ];
