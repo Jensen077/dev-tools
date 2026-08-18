@@ -139,14 +139,11 @@ jobs:
           version = tag.lstrip('v')
 
           result = subprocess.run(
-              ['gh', 'release', 'view', tag, '--json', 'assets', '--jq', '.[] | \"\\(.name)\t\\(.url)\"'],
+              ['gh', 'release', 'view', tag, '--json', 'assets'],
               capture_output=True, text=True
           )
-          assets = {}
-          for line in result.stdout.strip().split('\n'):
-              if '\t' in line:
-                  name, url = line.split('\t', 1)
-                  assets[name] = url
+          data = json.loads(result.stdout)
+          assets = {a['name']: a['url'] for a in data.get('assets', [])}
 
           print('Release assets:', json.dumps(list(assets.keys()), indent=2))
 
