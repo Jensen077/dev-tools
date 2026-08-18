@@ -612,6 +612,21 @@
   flex-shrink: 0;
 }
 
+.settings-update {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--fg);
+  flex-shrink: 0;
+}
+
+.settings-version {
+  color: var(--fg-secondary);
+  font-size: 12px;
+}
+
 .settings-item:not(:has(> .drag-handle)) {
   cursor: default;
 }

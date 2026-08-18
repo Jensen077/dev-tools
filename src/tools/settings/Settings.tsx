@@ -3,7 +3,11 @@ import { TOOLS } from "../index";
 import type { ToolDef } from "../index";
 import { useSettingsStore } from "../../store/settings";
 import { useAppStore } from "../../store/app";
+import { useCheckUpdate } from "../../hooks/useCheckUpdate";
+import pkg from "../../../package.json";
 import "../tool.css";
+
+const APP_VERSION = pkg.version;
 
 /** 拖拽中的实时数据 */
 interface DragState {
@@ -22,6 +26,7 @@ export function Settings() {
   const reset = useSettingsStore((s) => s.reset);
   const jsonPreview = useAppStore((s) => s.jsonPreview);
   const setJsonPreview = useAppStore((s) => s.setJsonPreview);
+  const { checkForUpdate, checking } = useCheckUpdate();
 
   const [drag, setDrag] = useState<DragState | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -207,6 +212,16 @@ export function Settings() {
         />
         悬停预览 JSON 值（点击 key 弹出，点击复制）
       </label>
+      <div className="settings-update">
+        <span className="settings-version">当前版本 v{APP_VERSION}</span>
+        <button
+          className="btn"
+          disabled={checking}
+          onClick={() => void checkForUpdate()}
+        >
+          {checking ? "检查中..." : "检查更新"}
+        </button>
+      </div>
       <div
         className={`settings-list${isDragging ? " dragging" : ""}${suppressAnim ? " no-anim" : ""}`}
         ref={listRef}

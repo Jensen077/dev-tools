@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { TOOLS } from "./tools";
 import { Settings } from "./tools/settings/Settings";
@@ -6,6 +6,8 @@ import { Sidebar } from "./components/Sidebar";
 import { useAppStore } from "./store/app";
 import { useSettingsStore } from "./store/settings";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useCheckUpdate } from "./hooks/useCheckUpdate";
+import { isDesktop } from "./utils/backend";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CommandPalette } from "./components/CommandPalette";
 import { ToastContainer } from "./components/Toast";
@@ -37,6 +39,17 @@ export default function App() {
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
   }, []);
+
+  const { checkForUpdate } = useCheckUpdate();
+  const checkedRef = useRef(false);
+
+  // 启动时自动检查更新（仅桌面环境，仅一次）
+  useEffect(() => {
+    if (isDesktop() && !checkedRef.current) {
+      checkedRef.current = true;
+      void checkForUpdate();
+    }
+  }, [checkForUpdate]);
 
   // 按配置顺序渲染侧边栏菜单
   const visibleTools = toolOrder

@@ -3,13 +3,15 @@ name: Release
 # 推 v* 标签触发：构建 macos(universal)/windows/ubuntu 三平台安装包，挂到该 tag 的草稿 Release
 # 使用：git tag v1.0.7 && git push origin v1.0.7 → CI 构建并创建草稿 Release，审核后点 Publish
 # 产物名带平台后缀：macos64 / windows64 / linux64（替换 Tauri 默认的架构段，便于区分下载）
+# 自动更新：matrix 构建完成后，manifest job 生成 latest.json 清单上传到 Release
+# 前置：需在仓库 Secrets 中配置 TAURI_SIGNING_PRIVATE_KEY 和 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 on:
   push:
     tags:
       - 'v*'
 
 permissions:
-  contents: write # 创建/编辑 Release 需写权限
+  contents: write
 
 jobs:
   build:
@@ -61,10 +63,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build bundles
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build ${{ matrix.args }}
 
       # 把产物复制到 artifacts/ 并重命名：架构段（_universal/_amd64/_x64）替换为平台后缀
-      # 只按最终产物扩展名收集（dmg/msi/exe/deb/AppImage），过滤 linuxdeploy 与 deb 打包的中间文件
+      # 同时收集 .sig 签名文件供 manifest job 生成 latest.json
       - name: Collect and rename artifacts
         shell: bash
         run: |
@@ -75,10 +80,20 @@ jobs:
             newname=$(printf '%s' "$base" | sed -E "s/_universal/_${{ matrix.suffix }}/; s/_amd64/_${{ matrix.suffix }}/; s/_x64/_${{ matrix.suffix }}/")
             cp "$f" "artifacts/$newname"
           done < <(find '${{ matrix.bundle_dir }}' -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \))
-          # macOS：把 .app 目录打包为 tar.gz（手动 build 不会自动生成，此前由 tauri-action 代劳）
+          # macOS：收集 Tauri 自动生成的 .app.tar.gz（createUpdaterArtifacts 会生成）
           if [ -d '${{ matrix.bundle_dir }}/macos/devbox.app' ]; then
-            tar -czf "artifacts/devbox_${{ matrix.suffix }}.app.tar.gz" -C '${{ matrix.bundle_dir }}/macos' devbox.app
+            # 优先使用 Tauri 自动生成的 .app.tar.gz（含 updater 签名）
+            auto_tar=$(find '${{ matrix.bundle_dir }}' -maxdepth 1 -name '*.app.tar.gz' | head -1)
+            if [ -n "$auto_tar" ]; then
+              base=$(basename "$auto_tar")
+              newname=$(printf '%s' "$base" | sed -E "s/_universal/_${{ matrix.suffix }}/")
+              cp "$auto_tar" "artifacts/$newname"
+            else
+              tar -czf "artifacts/devbox_${{ matrix.suffix }}.app.tar.gz" -C '${{ matrix.bundle_dir }}/macos' devbox.app
+            fi
           fi
+          # 收集 .sig 签名文件（保留原名，供 manifest job 使用）
+          find '${{ matrix.bundle_dir }}' -type f -name '*.sig' -exec cp {} artifacts/ \;
 
       - uses: softprops/action-gh-release@v2
         env:
@@ -92,3 +107,85 @@ jobs:
           draft: true
           prerelease: false
           files: artifacts/*
+
+  # 矩阵构建完成后，收集所有平台的签名文件生成 latest.json 更新清单
+  manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Generate latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          mkdir assets
+          gh release download "$TAG" --dir assets --skip-existing 2>/dev/null || true
+
+          python3 -c "
+          import json, os, glob
+          from datetime import datetime, timezone
+
+          tag = os.environ['TAG']
+          repo = os.environ['REPO']
+          version = tag.lstrip('v')
+          base_url = f'https://github.com/{repo}/releases/download/{tag}'
+
+          platforms = {}
+
+          # macOS universal：同时覆盖 darwin-x86_64 和 darwin-aarch64
+          mac_sig = glob.glob('assets/*universal*.app.tar.gz.sig')
+          if mac_sig:
+              with open(mac_sig[0]) as f:
+                  sig = f.read().strip()
+              tar_name = os.path.basename(mac_sig[0]).replace('.sig', '').replace('_universal', '_macos64')
+              # 如果重命名后的文件不存在，尝试原始文件名
+              if not os.path.exists(f'assets/{tar_name}'):
+                  tar_name = os.path.basename(mac_sig[0]).replace('.sig', '')
+              url = f'{base_url}/{tar_name}'
+              platforms['darwin-x86_64'] = {'signature': sig, 'url': url}
+              platforms['darwin-aarch64'] = {'signature': sig, 'url': url}
+
+          # Linux (deb)
+          linux_sig = glob.glob('assets/*_amd64*.deb.sig')
+          if linux_sig:
+              with open(linux_sig[0]) as f:
+                  sig = f.read().strip()
+              deb_name = os.path.basename(linux_sig[0]).replace('.sig', '').replace('_amd64', '_linux64')
+              if not os.path.exists(f'assets/{deb_name}'):
+                  deb_name = os.path.basename(linux_sig[0]).replace('.sig', '')
+              url = f'{base_url}/{deb_name}'
+              platforms['linux-x86_64'] = {'signature': sig, 'url': url}
+
+          # Windows (msi)
+          win_sig = glob.glob('assets/*_x64*.msi.sig')
+          if win_sig:
+              with open(win_sig[0]) as f:
+                  sig = f.read().strip()
+              msi_name = os.path.basename(win_sig[0]).replace('.sig', '').replace('_x64', '_windows64')
+              if not os.path.exists(f'assets/{msi_name}'):
+                  msi_name = os.path.basename(win_sig[0]).replace('.sig', '')
+              url = f'{base_url}/{msi_name}'
+              platforms['windows-x86_64'] = {'signature': sig, 'url': url}
+
+          manifest = {
+              'version': version,
+              'notes': f'See VERSION.md for details: https://github.com/{repo}/blob/main/VERSION.md',
+              'pub_date': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+              'platforms': platforms
+          }
+
+          with open('latest.json', 'w') as f:
+              json.dump(manifest, f, indent=2)
+          print('Generated latest.json:')
+          print(json.dumps(manifest, indent=2))
+          "
+
+      - name: Upload latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.ref_name }}" latest.json --clobber

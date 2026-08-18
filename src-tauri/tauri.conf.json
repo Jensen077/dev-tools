@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "devbox",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "identifier": "xyz.lecore.devbox",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -26,6 +26,7 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg", "msi", "nsis", "deb", "appimage"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -33,5 +34,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCOUU2RDY4RTUxMDRGRTMKUldUalR4RGxhRzJleS9tWmRKNmZIVWtEaWovL0N0Q0ZUN3IzSldBdHk5S1FvSE9pR0h6Z2hXbWMK",
+      "endpoints": [
+        "https://github.com/Jensen077/dev-tools/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
