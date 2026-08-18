@@ -1,9 +1,8 @@
 name: Release
 
 # 推 v* 标签触发：构建 macos(universal)/windows/ubuntu 三平台安装包，挂到该 tag 的草稿 Release
-# 使用：git tag v1.0.7 && git push origin v1.0.7 → CI 构建并创建草稿 Release，审核后点 Publish
 # 产物名带平台后缀：macos64 / windows64 / linux64（替换 Tauri 默认的架构段，便于区分下载）
-# 自动更新：matrix 构建完成后，manifest job 生成 latest.json 清单上传到 Release
+# 自动更新：matrix 构建完成后，manifest job 收集签名生成 latest.json 清单上传到 Release
 # 前置：需在仓库 Secrets 中配置 TAURI_SIGNING_PRIVATE_KEY 和 TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 on:
   push:
@@ -12,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build:
@@ -19,17 +19,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # mac universal：一个 dmg 同时支持 Apple Silicon 与 Intel
           - platform: macos-latest
             args: '--target universal-apple-darwin'
             bundle_dir: 'src-tauri/target/universal-apple-darwin/release/bundle'
             suffix: 'macos64'
-          # Linux：deb + AppImage
           - platform: ubuntu-22.04
             args: ''
             bundle_dir: 'src-tauri/target/release/bundle'
             suffix: 'linux64'
-          # Windows：msi + nsis(.exe)
           - platform: windows-latest
             args: ''
             bundle_dir: 'src-tauri/target/release/bundle'
@@ -53,7 +50,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          # mac universal 需同时安装两个 target；其他平台留空（用 host 默认 target）
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - uses: Swatinem/rust-cache@v2
@@ -68,13 +64,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build ${{ matrix.args }}
 
-      # 把产物复制到 artifacts/ 并重命名：架构段（_universal/_amd64/_x64）替换为平台后缀
-      # 同时收集 .sig 签名文件供 manifest job 生成 latest.json
       - name: Collect and rename artifacts
         shell: bash
         run: |
           set -e
-          mkdir -p artifacts
+          mkdir -p artifacts sig-artifacts
           while IFS= read -r f; do
             base=$(basename "$f")
             newname=$(printf '%s' "$base" | sed -E "s/_universal/_${{ matrix.suffix }}/; s/_amd64/_${{ matrix.suffix }}/; s/_x64/_${{ matrix.suffix }}/")
@@ -82,7 +76,6 @@ jobs:
           done < <(find '${{ matrix.bundle_dir }}' -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \))
           # macOS：收集 Tauri 自动生成的 .app.tar.gz（createUpdaterArtifacts 会生成）
           if [ -d '${{ matrix.bundle_dir }}/macos/devbox.app' ]; then
-            # 优先使用 Tauri 自动生成的 .app.tar.gz（含 updater 签名）
             auto_tar=$(find '${{ matrix.bundle_dir }}' -maxdepth 1 -name '*.app.tar.gz' | head -1)
             if [ -n "$auto_tar" ]; then
               base=$(basename "$auto_tar")
@@ -92,8 +85,8 @@ jobs:
               tar -czf "artifacts/devbox_${{ matrix.suffix }}.app.tar.gz" -C '${{ matrix.bundle_dir }}/macos' devbox.app
             fi
           fi
-          # 收集 .sig 签名文件（保留原名，供 manifest job 使用）
-          find '${{ matrix.bundle_dir }}' -type f -name '*.sig' -exec cp {} artifacts/ \;
+          # 签名文件单独收集到 sig-artifacts/，通过 workflow artifact 传递，不暴露到 Release
+          find '${{ matrix.bundle_dir }}' -type f -name '*.sig' -exec cp {} sig-artifacts/ \;
 
       - uses: softprops/action-gh-release@v2
         env:
@@ -102,19 +95,30 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: 'Devbox ${{ github.ref_name }}'
           body: '见 [VERSION.md](https://github.com/${{ github.repository }}/blob/main/VERSION.md) 的对应版本条目'
-          # 草稿模式：首个矩阵任务创建草稿 Release，后续任务把资产挂到同一草稿
-          # 全部构建完成后，到 Releases 页审核资产 → 点 Publish 发布
           draft: true
           prerelease: false
           files: artifacts/*
 
-  # 矩阵构建完成后，收集所有平台的签名文件生成 latest.json 更新清单
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sig-${{ matrix.suffix }}
+          path: sig-artifacts/
+
+  # 矩阵构建完成后，收集所有签名文件生成 latest.json 更新清单
   manifest:
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sig-*
+          path: sig-artifacts
+          merge-multiple: true
+
       - name: Generate latest.json
         env:
           GH_TOKEN: ${{ github.token }}
@@ -122,54 +126,53 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -e
-          mkdir assets
-          gh release download "$TAG" --dir assets --skip-existing 2>/dev/null || true
-
           python3 -c "
-          import json, os, glob
+          import json, os, glob, subprocess
           from datetime import datetime, timezone
 
           tag = os.environ['TAG']
           repo = os.environ['REPO']
           version = tag.lstrip('v')
-          base_url = f'https://github.com/{repo}/releases/download/{tag}'
+
+          result = subprocess.run(
+              ['gh', 'release', 'view', tag, '--json', 'assets', '--jq', '.[] | \"\\(.name)\t\\(.url)\"'],
+              capture_output=True, text=True
+          )
+          assets = {}
+          for line in result.stdout.strip().split('\n'):
+              if '\t' in line:
+                  name, url = line.split('\t', 1)
+                  assets[name] = url
 
           platforms = {}
 
           # macOS universal：同时覆盖 darwin-x86_64 和 darwin-aarch64
-          mac_sig = glob.glob('assets/*universal*.app.tar.gz.sig')
+          mac_sig = glob.glob('sig-artifacts/*.app.tar.gz.sig')
           if mac_sig:
               with open(mac_sig[0]) as f:
                   sig = f.read().strip()
-              tar_name = os.path.basename(mac_sig[0]).replace('.sig', '').replace('_universal', '_macos64')
-              # 如果重命名后的文件不存在，尝试原始文件名
-              if not os.path.exists(f'assets/{tar_name}'):
-                  tar_name = os.path.basename(mac_sig[0]).replace('.sig', '')
-              url = f'{base_url}/{tar_name}'
-              platforms['darwin-x86_64'] = {'signature': sig, 'url': url}
-              platforms['darwin-aarch64'] = {'signature': sig, 'url': url}
+              tar_url = next((u for n, u in assets.items() if 'macos64' in n and n.endswith('.app.tar.gz')), None)
+              if tar_url:
+                  platforms['darwin-x86_64'] = {'signature': sig, 'url': tar_url}
+                  platforms['darwin-aarch64'] = {'signature': sig, 'url': tar_url}
 
           # Linux (deb)
-          linux_sig = glob.glob('assets/*_amd64*.deb.sig')
+          linux_sig = glob.glob('sig-artifacts/*.deb.sig')
           if linux_sig:
               with open(linux_sig[0]) as f:
                   sig = f.read().strip()
-              deb_name = os.path.basename(linux_sig[0]).replace('.sig', '').replace('_amd64', '_linux64')
-              if not os.path.exists(f'assets/{deb_name}'):
-                  deb_name = os.path.basename(linux_sig[0]).replace('.sig', '')
-              url = f'{base_url}/{deb_name}'
-              platforms['linux-x86_64'] = {'signature': sig, 'url': url}
+              deb_url = next((u for n, u in assets.items() if 'linux64' in n and n.endswith('.deb')), None)
+              if deb_url:
+                  platforms['linux-x86_64'] = {'signature': sig, 'url': deb_url}
 
           # Windows (msi)
-          win_sig = glob.glob('assets/*_x64*.msi.sig')
+          win_sig = glob.glob('sig-artifacts/*.msi.sig')
           if win_sig:
               with open(win_sig[0]) as f:
                   sig = f.read().strip()
-              msi_name = os.path.basename(win_sig[0]).replace('.sig', '').replace('_x64', '_windows64')
-              if not os.path.exists(f'assets/{msi_name}'):
-                  msi_name = os.path.basename(win_sig[0]).replace('.sig', '')
-              url = f'{base_url}/{msi_name}'
-              platforms['windows-x86_64'] = {'signature': sig, 'url': url}
+              msi_url = next((u for n, u in assets.items() if 'windows64' in n and n.endswith('.msi')), None)
+              if msi_url:
+                  platforms['windows-x86_64'] = {'signature': sig, 'url': msi_url}
 
           manifest = {
               'version': version,
@@ -188,4 +191,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.ref_name }}" latest.json --clobber
+          gh release upload "${{ github.ref_name }}" latest.json --clobber --repo "${{ github.repository }}"
