@@ -4,7 +4,17 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## Unreleased
+## v1.0.15 — 2026-08-18
+
+**新增：YAML 互转工具**（侧边栏「YAML 互转」，id `yaml-convert`，「JSON」分组，纯前端零 Rust）
+
+- `src/tools/yaml-convert/YamlConvert.tsx` 新建工具：自动检测输入格式（JSON/YAML/Properties），单选输出格式，6 向互转；左右分栏 `ResizableSplit` + Monaco 编辑器按格式代码高亮（JSON→`json`/YAML→`yaml`/Properties→`ini`）；工具栏含格式标签/输出格式单选/转换（`Cmd+Enter`）/格式化/交换/打开文件/清空/ToolHistory；输入支持文件拖拽 + 打开文件按钮（`.json/.yml/.yaml/.properties/.txt`）；输入/输出标题栏各带复制按钮（`Cmd+Shift+C` 复制输出）；首次输入自动转换
+- 转换逻辑：`js-yaml`（已有依赖）的 `load`/`dump` 互转 JSON↔YAML；`src/utils/props.ts` 的 `parseProperties`/`flattenYamlValue` 处理 Properties，点号路径展平/还原含 `[index]` 数组索引；`tryParseValue` 自动类型推断（`true`/`false`/`null`/数字）
+- `src/utils/props.ts` 导出 `looksLikeJson`/`looksLikeYaml`/`parseProperties`/`flattenYamlValue`（原为内部函数）
+- `src/monaco-setup.ts` 新增 `Cmd+R` 快捷键映射到 `editor.action.startFindReplaceAction`（查找替换面板）；`src/App.tsx` 全局拦截 `Cmd+R` 的 `preventDefault` 防止页面刷新
+- `src/components/icons.tsx` 新增 `yaml-convert` SVG 图标；`src/tools/tool.css` 新增 `.format-badge`/`.toolbar-sep`/`.radio-label` 样式
+- `src/store/settings.ts` 默认收藏列表加入 `"yaml-convert"`
+- 按「新工具三步」注册：`src/tools/index.tsx` 的 `TOOLS` 数组追加 `{ id: "yaml-convert", name: "YAML 互转", icon: <ToolIcon name="yaml-convert" />, component: YamlConvert, cat: "JSON" }`
 
 **新增：配置文件值比对工具**（侧边栏「配置文件值比对」，id `props-diff`，「文本」分组）
 
@@ -21,7 +31,7 @@
 
 **侧边栏布局预览**：`docs/sidebar-layout-preview.html` 新增设计稿，预览拓展工具后的侧边栏深浅两套布局
 
-## v1.0.15 — 2026-08-17
+## v1.0.14 — 2026-08-17
 
 **新增：Cron 表达式生成器**（侧边栏「Cron」，id `cron`，「通用」分组，纯前端零 Rust）
 
