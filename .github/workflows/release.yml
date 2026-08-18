@@ -117,7 +117,11 @@ jobs:
         with:
           pattern: sig-*
           path: sig-artifacts
-          merge-multiple: true
+
+      - name: Debug sig artifacts
+        run: |
+          echo "=== sig-artifacts tree ==="
+          find sig-artifacts -type f | sort || echo "EMPTY"
 
       - name: Generate latest.json
         env:
@@ -144,10 +148,13 @@ jobs:
                   name, url = line.split('\t', 1)
                   assets[name] = url
 
+          print('Release assets:', json.dumps(list(assets.keys()), indent=2))
+
           platforms = {}
 
           # macOS universal：同时覆盖 darwin-x86_64 和 darwin-aarch64
-          mac_sig = glob.glob('sig-artifacts/*.app.tar.gz.sig')
+          mac_sig = glob.glob('sig-artifacts/**/*.app.tar.gz.sig', recursive=True)
+          print(f'macOS sig found: {mac_sig}')
           if mac_sig:
               with open(mac_sig[0]) as f:
                   sig = f.read().strip()
@@ -157,7 +164,8 @@ jobs:
                   platforms['darwin-aarch64'] = {'signature': sig, 'url': tar_url}
 
           # Linux (deb)
-          linux_sig = glob.glob('sig-artifacts/*.deb.sig')
+          linux_sig = glob.glob('sig-artifacts/**/*.deb.sig', recursive=True)
+          print(f'Linux sig found: {linux_sig}')
           if linux_sig:
               with open(linux_sig[0]) as f:
                   sig = f.read().strip()
@@ -166,7 +174,8 @@ jobs:
                   platforms['linux-x86_64'] = {'signature': sig, 'url': deb_url}
 
           # Windows (msi)
-          win_sig = glob.glob('sig-artifacts/*.msi.sig')
+          win_sig = glob.glob('sig-artifacts/**/*.msi.sig', recursive=True)
+          print(f'Windows sig found: {win_sig}')
           if win_sig:
               with open(win_sig[0]) as f:
                   sig = f.read().strip()
