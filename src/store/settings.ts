@@ -14,6 +14,7 @@ const DEFAULT_FAVORITES = [
   "log-extractor",
   "props-diff",
   "yaml-convert",
+  "param-convert",
 ];
 
 interface ToolSettingsState {

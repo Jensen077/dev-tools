@@ -1276,3 +1276,85 @@
     animation: none;
   }
 }
+
+/* ===== 时间戳工具 ===== */
+
+/* 解析结果区：紧凑高度不参与 flex 拉伸（时区网格才是滚动区） */
+.ts-result {
+  flex: none;
+  max-height: 240px;
+}
+
+/* 结果行可点击复制 */
+.kv-copy {
+  cursor: pointer;
+}
+
+/* UTC 时间选择器字段（原生 select，基础样式复用 .toolbar select） */
+.ts-field {
+  gap: 4px;
+}
+
+.ts-sep {
+  color: var(--faint);
+  font-size: 13px;
+}
+
+/* 世界时区网格：自适应列数，容器内滚动 */
+.tz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+  padding: 2px;
+}
+
+/* 时区卡片（点击复制该时区时间） */
+.tz-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 150ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.tz-card:hover {
+  background: var(--hover);
+  border-color: var(--accent);
+}
+
+/* 本地时区卡片高亮（Baby Blue 底 + Meta Blue 边框） */
+.tz-card.local {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.tz-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tz-card.local .tz-label {
+  color: var(--accent-soft-fg);
+}
+
+.tz-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.tz-card.local .tz-time {
+  color: var(--accent-soft-fg);
+}

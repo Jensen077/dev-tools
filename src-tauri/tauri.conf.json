@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "devbox",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "identifier": "xyz.lecore.devbox",
   "build": {
     "beforeDevCommand": "pnpm dev",

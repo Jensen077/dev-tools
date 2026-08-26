@@ -4,6 +4,17 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
+## Unreleased
+
+**默认收藏加入「参数转换」**：`src/store/settings.ts` 的 `DEFAULT_FAVORITES` 追加 `"param-convert"`，首次使用即在「常用」分组展示；已有 `devbox-favorites` 存量的用户不受影响（可手动点星标收藏）
+
+**时间戳工具重构：智能解析 + select 选择器 + 世界时区网格**（`src/tools/timestamp/`，纯前端零新依赖）
+
+- 新增 `src/tools/timestamp/datetime.ts` 纯函数模块：`parseSmart` 统一解析（紧凑 `yyyyMMdd`/`yyyyMMddHHmmss` 先于纯数字分支防吞、纯数字秒/毫秒按 `|v| < 1e12` 量级识别、日期串支持 `-`/`/`/`.` 分隔符与不补零字段、ISO 变体 `T` 分隔/`.SSS`/尾缀 `Z`/`±HH:MM`/`±HHmm`/`±HH`、兜底 `Date.parse`；无时区后缀一律按 UTC，`utcMs` 往返校验拒绝 2 月 30 类假日期）、`fmtAtOffset`（`ms + offset*60000` + `getUTC*` 拼串，不依赖 Intl）、`fmtUTC`/`fmtLocal`/`diffLabel`（自旧组件迁入）、`TIMEZONES` 25 个整点时区静态表（UTC-12 贝克岛 … UTC+12 奥克兰）
+- 重写 `Timestamp.tsx`：单一 `input` 状态 + `parseSmart` 实时解析，替代原「时间戳->日期 / 日期->时间戳」两区块；原生 select 六下拉（年 1900-2100/月/日/时/分/秒，`.toolbar select` 既有样式）表示 UTC 时间并与输入框双向同步（select 变更 -> `Date.UTC` 重组 -> 覆写输入为 `yyyy-MM-dd HH:mm:ss` UTC 串 -> 重新解析收敛，`Date.UTC` 静默归一化 2 月 30）；「现在」「今天 00:00」快捷按钮填 UTC 串；解析失败时 select 经 `fallbackMs` 保持上次有效值；结果区 kv-list 六行（毫秒/秒/ISO 8601/UTC/本地/相对当前）点击复制；时区网格 `.tz-grid` 自适应卡片点击复制该时区时间，本地时区卡片 Baby Blue 高亮（`-getTimezoneOffset()` 精确匹配，半时区不亮）；旧草稿 `tsInput` 字段回落迁移，历史 `payload.input` 结构不变
+- `tool.css` 追加 `.ts-result`（不参与 flex 拉伸）/`.kv-copy`/`.ts-field`/`.ts-sep`/`.tz-grid`/`.tz-card`（含 `.local` 高亮，全部用既有令牌）
+- README 功能一览「时间戳」条目同步更新
+
 ## v1.0.15 — 2026-08-18
 
 **新增：YAML 互转工具**（侧边栏「YAML 互转」，id `yaml-convert`，「JSON」分组，纯前端零 Rust）
