@@ -4,7 +4,7 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## Unreleased
+## v1.0.17
 
 **默认收藏加入「参数转换」**：`src/store/settings.ts` 的 `DEFAULT_FAVORITES` 追加 `"param-convert"`，首次使用即在「常用」分组展示；已有 `devbox-favorites` 存量的用户不受影响（可手动点星标收藏）
 
