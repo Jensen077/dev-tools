@@ -1359,7 +1359,7 @@
   color: var(--accent-soft-fg);
 }
 
-/* 测试卡号：模板输入 / 多行校验输入 / 中性标签 */
+/* Luhn 工具：模板输入 / 多行校验输入 / 中性标签 */
 .tc-template {
   flex: 0 1 320px;
   font-family: var(--font-mono);

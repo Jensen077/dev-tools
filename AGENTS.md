@@ -58,9 +58,9 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
   - `components/` — 通用组件：Sidebar、JsonEditor、JsonOutput、TextDiffEditor、ResizableSplit（可拖拽分栏）、ToolHistory、CommandPalette、Toast、ErrorBoundary、icons
   - `hooks/` — 自定义 Hook：useSaveDraft（草稿持久化）、useKeyboardShortcuts（全局快捷键）、useFileDrop（文件拖拽）
   - `store/` — zustand 状态：app（主题/当前工具/草稿）、history、settings（工具显隐排序）、toast
-  - `utils/` — 纯函数工具：hash、encoding、base64url、fileEncoding、testcard（测试卡号，Luhn/卡组织/模板/生成/校验）、backend（桌面/网页 invoke 适配层 + JS 降级实现）
+  - `utils/` — 纯函数工具：hash、encoding、base64url、fileEncoding、luhn（Luhn 校验/数字生成，任意前缀模板 + 末位补校验位）、backend（桌面/网页 invoke 适配层 + JS 降级实现）
   - `tools/` — 工具组件（每工具一个子目录，含 `index.tsx` 注册表与 `tool.css` 通用样式）
-    - `json-formatter/`、`json-diff/`、`log-extractor/`、`text-diff/`、`props-diff/`、`json-table/`、`json-field-extract/`、`history/`、`curl-runner/`、`image-preview/`、`encode-convert/`、`timestamp/`、`hash/`、`regex-tester/`、`jwt/`、`param-convert/`、`uuid/`、`test-card/`
+    - `json-formatter/`、`json-diff/`、`log-extractor/`、`text-diff/`、`props-diff/`、`json-table/`、`json-field-extract/`、`history/`、`curl-runner/`、`image-preview/`、`encode-convert/`、`timestamp/`、`hash/`、`regex-tester/`、`jwt/`、`param-convert/`、`uuid/`、`luhn/`
   - `App.tsx` — 应用根组件（标题栏拖拽区、侧边栏、工具交叉渐隐舞台、命令面板）
   - `main.tsx` / `monaco-setup.ts` / `types.ts` — 入口与 Monaco/类型基础
 - `src-tauri/` — Rust 后端
@@ -87,7 +87,7 @@ macOS 桌面开发工具箱（devbox）：Tauri 2 + React 19 + TypeScript + Vite
 
 - `tsconfig` 极严格：`noUncheckedIndexedAccess`/`noUnusedLocals`/`noImplicitReturns`，数组索引访问需非空断言（现有代码用 `order[i]!`）
 - 每个工具组件内 `useSaveDraft(toolId, {...})` 保存草稿、启动时从 `drafts[toolId]` 恢复。**例外**：JSON 格式化（`json-formatter`）已改为多标签容器（`FormatterTabs.tsx`）——`Formatter` 经 `initialData`/`onChange` 受控化，持久化走 localStorage `devbox-json-formatter-tabs`，不用 `useSaveDraft`
-- **测试卡号工具的安全边界**（`src/utils/testcard.ts`）：`TEST_BIN_RANGES` 只收录网关公开测试段，`parseTemplate` 拒绝段外 BIN。**勿把真实发卡行 BIN（含用户给的 `xxxx` 模板前缀）加入白名单**——按真实 BIN 批量生成卡号是盗刷素材，且沙箱环境只认各家测试段、真实段无测试价值；确需新测试段只能来自网关公开文档，并在 UI 的拒绝提示里列出可用段
+- **Luhn 工具的安全边界**（`src/utils/luhn.ts`）：**不做卡组织识别、不设 BIN 白名单**，只按「固定前缀 + 尾部 x」模板生成「能过 Luhn 的数字」，定位是表单/接口测试数据，UI 与 README 均声明「不保证是真实卡号、勿用于支付/授权」。**不要让这个工具变成按真实发卡行 BIN 批量生成卡号的『卡生成器』**——去掉那条技术防线后，判断底线是：我们只提供 Luhn 数字生成，不提供「特定真实 BIN 的卡号批量导出 + 卡组织/有效期/CVC 配套」这类盗刷素材能力
 - 版本号同步维护三处：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json`
 - 允许的文件拖拽由 `useFileDrop` 自实现计数方案（Monaco 关了 dropIntoEditor），勿回退到 Monaco 原生拖拽
 - **UI 范式**：遵循 `skills/dev-tools-design/DESIGN.md`（Meta (Store) 风格，仓库内唯一设计契约，改 UI 前必读）

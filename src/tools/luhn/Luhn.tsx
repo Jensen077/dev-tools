@@ -5,57 +5,54 @@ import { useSaveDraft } from "../../hooks/useSaveDraft";
 import { useToastStore } from "../../store/toast";
 import { ToolHistory } from "../../components/ToolHistory";
 import {
-  PRESET_TEST_CARDS,
-  TEST_BIN_RANGES,
-  formatCard,
-  generateFromTemplate,
+  formatLuhn,
+  generateLuhn,
   parseTemplate,
-  templateForRange,
-  validateCards,
-  type CardRow,
-} from "../../utils/testcard";
+  validateNumbers,
+  type LuhnRow,
+} from "../../utils/luhn";
 import "../tool.css";
 
 type Mode = "gen" | "check";
 
-/** 默认模板：Stripe Visa 公开测试段 */
-const DEFAULT_TEMPLATE = "400000xxxxxxxxxx";
+/** 默认模板：任意前缀 + 尾部 x 占位（末位自动补 Luhn 校验位） */
+const DEFAULT_TEMPLATE = "400004xxxxxxxxxx";
 const COUNT_OPTIONS = [1, 3, 5, 10];
-/** 校验结果最多渲染行数（防止粘贴上万行卡死界面） */
+/** 快速示例模板（任意前缀，仅作占位用法演示） */
+const QUICK_TEMPLATES = [
+  "400004xxxxxxxxxx",
+  "424242xxxx xxxx xx",
+  "1234 5678 xxxx xxxx",
+  "0000000000100xx",
+];
+/** 校验结果最多渲染行数 */
 const MAX_CHECK_ROWS = 200;
 
-/** 单张卡片复制文本：勾选时带 有效期 / CVC（Tab 分隔，方便粘进表格） */
-function rowText(r: CardRow): string {
-  return [r.number, r.expiry, r.cvc].filter((v) => v).join("\t");
-}
-
-export function TestCard() {
-  const savedDraft = useAppStore((s) => s.drafts["test-card"]) as Record<string, unknown> | undefined;
+export function Luhn() {
+  const savedDraft = useAppStore((s) => s.drafts["luhn"]) as Record<string, unknown> | undefined;
   const [mode, setMode] = useState<Mode>((savedDraft?.mode as Mode) ?? "gen");
   const [template, setTemplate] = useState((savedDraft?.template as string) ?? DEFAULT_TEMPLATE);
   const [count, setCount] = useState((savedDraft?.count as number) ?? 3);
-  const [withExtras, setWithExtras] = useState((savedDraft?.withExtras as boolean) ?? true);
-  const [rows, setRows] = useState<CardRow[]>([]);
+  const [rows, setRows] = useState<LuhnRow[]>([]);
   const [checkInput, setCheckInput] = useState((savedDraft?.checkInput as string) ?? "");
   const [error, setError] = useState<string | null>(null);
   const addHistory = useHistoryStore((s) => s.addHistory);
   const showToast = useToastStore((s) => s.showToast);
-  // 标记本次挂载是否来自历史「加载」，避免挂载时自动生成覆盖历史回填
   const historyAppliedRef = useRef(false);
 
   const parsed = useMemo(() => parseTemplate(template), [template]);
-  const checked = useMemo(() => validateCards(checkInput), [checkInput]);
+  const checked = useMemo(() => validateNumbers(checkInput), [checkInput]);
   const okCount = checked.filter((r) => r.ok).length;
 
-  useApplyHistory("test-card", (payload) => {
+  useApplyHistory("luhn", (payload) => {
     historyAppliedRef.current = true;
     if (payload.mode === "gen" || payload.mode === "check") setMode(payload.mode);
     if (payload.template) setTemplate(payload.template);
     if (payload.count) setCount(Number(payload.count));
-    if (payload.cardRows) {
+    if (payload.rows) {
       try {
-        const parsedRows = JSON.parse(payload.cardRows);
-        setRows(Array.isArray(parsedRows) ? (parsedRows as CardRow[]) : []);
+        const arr = JSON.parse(payload.rows);
+        setRows(Array.isArray(arr) ? (arr as LuhnRow[]) : []);
       } catch {
         setRows([]);
       }
@@ -69,20 +66,15 @@ export function TestCard() {
       return;
     }
     setError(null);
-    const batch = generateFromTemplate(p, count, withExtras);
+    const batch = generateLuhn(p, count);
     setRows(batch);
     addHistory({
-      toolId: "test-card",
-      toolName: "测试卡号",
-      action: `生成 ${batch.length} 张（${p.range?.brand ?? ""}）`,
-      payload: {
-        template,
-        count: String(count),
-        mode: "gen",
-        cardRows: JSON.stringify(batch),
-      },
+      toolId: "luhn",
+      toolName: "Luhn 校验 & 生成",
+      action: `生成 ${batch.length} 个 Luhn 数字（${p.length} 位）`,
+      payload: { template, count: String(count), mode: "gen", rows: JSON.stringify(batch) },
     });
-  }, [template, count, withExtras, addHistory]);
+  }, [template, count, addHistory]);
 
   // 打开工具时若无历史结果则先给一批
   useEffect(() => {
@@ -102,29 +94,19 @@ export function TestCard() {
 
   const copyAll = () => {
     if (rows.length === 0) return;
-    void copyText(rows.map(rowText).join("\n"), `已复制 ${rows.length} 张测试卡号`);
+    void copyText(rows.map((r) => r.number).join("\n"), `已复制 ${rows.length} 个数字`);
   };
 
-  /** 校验结果导出为 TSV（表头 + 每行判定） */
   const copyChecked = () => {
     if (checked.length === 0) return;
     const lines = [
-      ["卡号", "卡组织", "位数", "Luhn", "测试段", "说明"].join("\t"),
-      ...checked.map((r) =>
-        [
-          formatCard(r.digits, r.brand),
-          r.brand ?? "—",
-          String(r.length),
-          r.luhn ? "通过" : "失败",
-          r.testRange ? "是" : "否",
-          r.reason,
-        ].join("\t"),
-      ),
+      ["数字", "长度", "Luhn", "说明"].join("\t"),
+      ...checked.map((r) => [formatLuhn(r.digits), String(r.length), r.luhn ? "通过" : "失败", r.reason].join("\t")),
     ];
     void copyText(lines.join("\n"), `已复制 ${checked.length} 条校验结果`);
   };
 
-  useSaveDraft("test-card", { mode, template, count, withExtras, checkInput });
+  useSaveDraft("luhn", { mode, template, count, checkInput });
 
   const modeSwitch = (
     <span className="seg-wrap">
@@ -147,17 +129,19 @@ export function TestCard() {
     </span>
   );
 
+  // 两种模式共用底部声明
+  const disclaimer = (
+    <div className="hint">
+      仅用于表单 / 接口的 Luhn 校验测试。生成的只是「能过 Luhn 的数字串」，不保证是真实卡号，禁止用于任何支付 / 授权 / 实名场景。
+    </div>
+  );
+
   if (mode === "check") {
     return (
       <div className="tool-page">
         <div className="toolbar">
           {modeSwitch}
-          <button
-            className="btn"
-            data-hotkey="copy"
-            onClick={copyChecked}
-            disabled={checked.length === 0}
-          >
+          <button className="btn" data-hotkey="copy" onClick={copyChecked} disabled={checked.length === 0}>
             复制结果
             <span className="btn-hotkey">⇧⌘C</span>
           </button>
@@ -165,16 +149,16 @@ export function TestCard() {
             清空
           </button>
           <span className="spacer" />
-          <ToolHistory toolId="test-card" />
+          <ToolHistory toolId="luhn" />
         </div>
         {error && <div className="error-box">{error}</div>}
         <div className="pane">
           <div className="pane-title">
-            待校验卡号（每行一个，空格与 - 忽略）
+            待校验数字（每行一个，空格与 - 忽略）
             <span className="spacer" />
             {checked.length > 0 && (
               <span className="hint">
-                合法 {okCount} / 共 {checked.length}
+                通过 {okCount} / 共 {checked.length}
               </span>
             )}
           </div>
@@ -182,50 +166,40 @@ export function TestCard() {
             className="text-input tc-textarea"
             value={checkInput}
             onChange={(e) => setCheckInput(e.target.value)}
-            placeholder={"4242 4242 4242 4242\n4000 0000 0000 0002"}
+            placeholder={"4242 4242 4242 4242\n4000040000000000\n1234"}
             spellCheck={false}
           />
         </div>
         <div className="pane">
           <div className="pane-title">
-            校验结果（Luhn + 卡组织 + 测试段）
+            校验结果（Luhn + 长度）
             <span className="spacer" />
-            {checked.length > MAX_CHECK_ROWS && (
-              <span className="hint">仅显示前 {MAX_CHECK_ROWS} 行</span>
-            )}
+            {checked.length > MAX_CHECK_ROWS && <span className="hint">仅显示前 {MAX_CHECK_ROWS} 行</span>}
           </div>
           {checked.length === 0 ? (
             <div className="empty-state">
-              <span className="empty-icon">💳</span>
-              粘贴卡号后实时校验，只做 Luhn / 位数 / 卡组织判定，不发起任何网络请求
+              <span className="empty-icon">🔢</span>
+              粘贴数字后实时判定 Luhn 与长度，仅本地计算、不发任何网络请求
             </div>
           ) : (
             <div className="table-wrap">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>卡号</th>
-                    <th>卡组织</th>
-                    <th>位数</th>
+                    <th>数字</th>
+                    <th>长度</th>
                     <th>Luhn</th>
-                    <th>测试段</th>
                     <th>说明</th>
                   </tr>
                 </thead>
                 <tbody>
                   {checked.slice(0, MAX_CHECK_ROWS).map((r) => (
                     <tr key={`${r.digits}-${r.raw}`}>
-                      <td>{formatCard(r.digits, r.brand)}</td>
-                      <td>{r.brand ?? "—"}</td>
+                      <td>{formatLuhn(r.digits)}</td>
                       <td>{r.length}</td>
                       <td>
                         <span className={`badge ${r.luhn ? "badge-added" : "badge-removed"}`}>
                           {r.luhn ? "通过" : "失败"}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${r.testRange ? "badge-neutral" : "badge-modified"}`}>
-                          {r.testRange ? "是" : "否"}
                         </span>
                       </td>
                       <td>{r.reason}</td>
@@ -236,6 +210,7 @@ export function TestCard() {
             </div>
           )}
         </div>
+        {disclaimer}
       </div>
     );
   }
@@ -253,11 +228,11 @@ export function TestCard() {
           <span className="btn-hotkey">⇧⌘C</span>
         </button>
         <span className="spacer" />
-        <ToolHistory toolId="test-card" />
+        <ToolHistory toolId="luhn" />
       </div>
       {error && <div className="error-box">{error}</div>}
       <div className="pane">
-        <div className="pane-title">卡段模板（BIN + 尾部 x 占位符，末位自动补 Luhn 校验位）</div>
+        <div className="pane-title">模板（固定前缀 + 尾部 x 占位，末位自动补 Luhn 校验位）</div>
         <div className="toolbar">
           <input
             className="text-input tc-template"
@@ -267,7 +242,7 @@ export function TestCard() {
             spellCheck={false}
           />
           <span className="seg-wrap">
-            <span className="seg-label">张数</span>
+            <span className="seg-label">个数</span>
             <span className="seg">
               {COUNT_OPTIONS.map((n) => (
                 <button
@@ -281,26 +256,18 @@ export function TestCard() {
               ))}
             </span>
           </span>
-          <label className="tool-toggle" title="生成未来有效期（MM/YY）与对应位数的 CVC">
-            <input
-              type="checkbox"
-              checked={withExtras}
-              onChange={(e) => setWithExtras(e.target.checked)}
-            />
-            含有效期与 CVC
-          </label>
         </div>
         <div className="toolbar tc-bins">
-          <span className="seg-label">公开测试段</span>
-          {TEST_BIN_RANGES.map((r) => (
+          <span className="seg-label">示例</span>
+          {QUICK_TEMPLATES.map((q) => (
             <button
-              key={r.prefix}
+              key={q}
               type="button"
               className="algo-chip"
-              title={`${r.brand} · ${r.prefix} · ${r.length} 位 · ${r.source}`}
-              onClick={() => setTemplate(templateForRange(r))}
+              title={q}
+              onClick={() => setTemplate(q)}
             >
-              {r.prefix}
+              {q}
             </button>
           ))}
         </div>
@@ -308,14 +275,14 @@ export function TestCard() {
       </div>
       <div className="pane">
         <div className="pane-title">
-          生成结果（{rows.length} 张，均为 Luhn 合法的沙箱测试卡号）
+          生成结果（{rows.length} 个 · {parsed.ok ? `${parsed.length} 位` : ""} · Luhn 合法）
           <span className="spacer" />
-          <span className="hint">点单行复制纯卡号</span>
+          <span className="hint">点单行复制纯数字</span>
         </div>
         {rows.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-icon">💳</span>
-            选一个测试段或直接写模板，点「生成」得到一批测试卡号
+            <span className="empty-icon">🔢</span>
+            写一个模板（固定段 + 尾部 x）点「生成」，得到一批过 Luhn 的数字
           </div>
         ) : (
           <div className="hash-list">
@@ -324,12 +291,10 @@ export function TestCard() {
                 <code className="hash-value" title={r.number}>
                   {r.formatted}
                 </code>
-                <span className="badge badge-neutral">{r.brand}</span>
-                {r.expiry && <span className="badge badge-neutral">{r.expiry}</span>}
-                {r.cvc && <span className="badge badge-neutral">CVC {r.cvc}</span>}
+                <span className="badge badge-neutral">{r.length} 位</span>
                 <button
                   className="btn btn-sm"
-                  onClick={() => void copyText(rowText(r), "已复制测试卡号")}
+                  onClick={() => void copyText(r.number, "已复制数字")}
                 >
                   复制
                 </button>
@@ -338,27 +303,7 @@ export function TestCard() {
           </div>
         )}
       </div>
-      <div className="pane">
-        <div className="pane-title">
-          常用沙箱测试卡（官方文档原号，语义固定）
-          <span className="spacer" />
-          <span className="hint">点击整行复制卡号</span>
-        </div>
-        <div className="kv-list">
-          {PRESET_TEST_CARDS.map((c) => (
-            <div
-              key={c.number}
-              className="kv-item kv-copy"
-              title="点击复制卡号"
-              onClick={() => void copyText(c.number, `已复制 ${c.brand} 测试卡号`)}
-            >
-              <span className="kv-key">{c.brand}</span>
-              <span className="kv-value">{formatCard(c.number, c.brand)}</span>
-              <span className="badge badge-modified">{c.note}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {disclaimer}
     </div>
   );
 }
