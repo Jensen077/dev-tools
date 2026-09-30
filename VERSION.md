@@ -4,7 +4,15 @@
 > 每次发版先在这里补一条，再改三处版本号，最后 `pnpm tauri build`。
 > **积压式**：功能落地时先记一条 `## Unreleased`（技术性），到发版日把 `Unreleased` 改为 `## vX.Y.Z — 日期`。
 
-## v1.0.17
+## v1.0.18 — 2026-09-30
+
+**新增：测试卡号工具**（侧边栏「测试卡号」，id `test-card`，「编码与安全」分组，纯前端零新依赖）
+
+- 新增 `src/utils/testcard.ts` 纯函数模块：`luhnOk`/`luhnCheckDigit`（模 10）、`brandOf`（IIN 识别 6 卡组织）、`formatCard`（Amex 4-6-5 / Diners 4-6-4 / 其余每 4 位）、`parseTemplate`（`BIN + 尾部 x` 模板，容错空格/`-`/`*`，限 12–19 位）、`generateFromTemplate`（`crypto.getRandomValues` 填随机位 + 末位补 Luhn 校验位）、`validateCards`（批量逐行：位数/Luhn/位数是否符合卡组织/是否公开测试段）
+- **安全约束**：`TEST_BIN_RANGES` 仅收录网关公开测试段（Stripe 400000/400005/424242、Authorize.Net 411111、MC 555555/520082/510510/222300、Amex 378282/371449、Discover 601111/601100、JCB 356600/353011、Diners 305693/385200）；`parseTemplate` 拒绝段外 BIN 并列出可用段。**有意不生成真实发卡行 BIN 的卡号**；新增测试段只允许来自网关公开文档
+- 新增 `src/tools/test-card/TestCard.tsx`：「生成/校验」两分段。生成段 = 模板输入 + 张数 seg（1/3/5/10）+「含有效期与 CVC」开关 + 16 个测试段胶囊（点击填入模板）+ 结果列表（单行复制纯卡号，全部复制为 `数字<TAB>有效期<TAB>CVC`）+ 常用沙箱卡面板（官方文档原号，点击复制）；校验段 = 多行 textarea 实时判定表格（卡号/卡组织/位数/Luhn 徽标/测试段/说明）+ 复制结果(TSV)。草稿 `useSaveDraft("test-card",...)`，历史 `payload={template,count,mode,cardRows}`
+- `icons.tsx` 追加 `test-card` 图标（1.5px 单线银行卡）；`tool.css` 追加 `.tc-template`/`.tc-textarea`/`.tc-bins .algo-chip`/`.badge-neutral`
+- README 功能一览「编码与安全」同步新增
 
 **默认收藏加入「参数转换」**：`src/store/settings.ts` 的 `DEFAULT_FAVORITES` 追加 `"param-convert"`，首次使用即在「常用」分组展示；已有 `devbox-favorites` 存量的用户不受影响（可手动点星标收藏）
 

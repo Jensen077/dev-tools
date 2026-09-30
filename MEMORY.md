@@ -94,3 +94,15 @@
 - **根因**：改造 `.side-group-label` 为折叠按钮时留下游离残片（两条声明 + 多余的 `}`）。CSS 错误恢复机制把「游离声明序列 + `}`」与下一条规则的选择器（`.side-footer`）拼接为同一个非法 qualified rule 的 prelude，整条丢弃——只吞紧邻其后的一条规则，其余照常解析，故无报错且难以察觉。
 - **对策**：手改 CSS 块时确认花括号配对闭合（删旧块要删干净）；排查「莫名丢一条样式」时先看该规则上游是否有残片，可在 DevTools Console 遍历 `document.styleSheets` 检查目标 selector 是否存在于 cssRules，快速定位被吞规则。
 
+## `data-hotkey` 是语义标记，不是任意按钮样式
+
+- **现象**：新工具把 `data-hotkey="copy"` 顺手打在「清空」按钮上，用户按 `⇧⌘C` 时不是复制而是清空输入，行为错乱且难以察觉。
+- **根因**：`useKeyboardShortcuts` 通过 `document.querySelector('[data-hotkey="copy"]')` 全局命中对应快捷键，标记即绑定快捷键语义，与按钮文案无关。
+- **对策**：`data-hotkey="copy"` 只能给真正复制结果的按钮（同页最多一个），其它按钮不加；新增工具跑无头 Chrome 渲染探针核对快捷键按钮与实际语义一致。
+
+## `vite build --config xx` 不会改 root，容易把产物写进仓库根 `dist`
+
+- **现象**：想临时构建一个探针页面（如无头 Chrome 渲染验证单个工具），`vite build --config .probe/vite.config.ts` 从仓库根执行，产物没进 `.probe/dist`，而是直接覆盖了仓库根 `dist/`（git 忽略，CI 会重构建，但本地会拿到探针版本的旧 shell）。
+- **根因**：`root` 默认取 `process.cwd()`（仓库根）而非配置文件所在目录；`--config` 只改配置文件，不改该目录。
+- **对策**：临时构建务必在配置里显式 `root: <探针目录>` + `outDir: <绝对路径>`（放 `/tmp` 且配 `emptyOutDir`），构建后确认产物目录再 `http.server`；结束后跑一次正式 `pnpm build` 恢复仓库 `dist/`。
+
