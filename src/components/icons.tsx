@@ -181,6 +181,15 @@ const icons: Record<string, ReactNode> = {
         <line x1="4" y1="9" x2="9" y2="9" />
       </>,
     ),
+
+    IcoG(
+      "test-card",
+      <>
+        <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" />
+        <line x1="1.5" y1="6.5" x2="14.5" y2="6.5" />
+        <line x1="4" y1="10" x2="8" y2="10" />
+      </>,
+    ),
   ]),
 };
 

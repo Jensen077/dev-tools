@@ -16,6 +16,7 @@ import { CurlRunner } from "./curl-runner/CurlRunner";
 import { ImagePreview } from "./image-preview/ImagePreview";
 import { ParamConvert } from "./param-convert/ParamConvert";
 import { Uuid } from "./uuid/Uuid";
+import { TestCard } from "./test-card/TestCard";
 import { Rsa } from "./rsa/Rsa";
 import { Cron } from "./cron/Cron";
 import { YamlConvert } from "./yaml-convert/YamlConvert";
@@ -68,6 +69,7 @@ export const TOOLS: ToolDef[] = [
   { id: "jwt", name: "JWT 解析", icon: <ToolIcon name="jwt" />, component: Jwt, cat: "编码与安全" },
   { id: "param-convert", name: "参数转换", icon: <ToolIcon name="param-convert" />, component: ParamConvert, cat: "编码与安全" },
   { id: "uuid", name: "UUID", icon: <ToolIcon name="uuid" />, component: Uuid, cat: "编码与安全" },
+  { id: "test-card", name: "测试卡号", icon: <ToolIcon name="test-card" />, component: TestCard, cat: "编码与安全" },
   { id: "rsa", name: "RSA", icon: <ToolIcon name="rsa" />, component: Rsa, cat: "编码与安全" },
   { id: "cron", name: "Cron", icon: <ToolIcon name="cron" />, component: Cron, cat: "通用" },
   { id: "yaml-convert", name: "YAML 互转", icon: <ToolIcon name="yaml-convert" />, component: YamlConvert, cat: "JSON" },

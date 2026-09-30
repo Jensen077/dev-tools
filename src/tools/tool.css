@@ -1358,3 +1358,34 @@
 .tz-card.local .tz-time {
   color: var(--accent-soft-fg);
 }
+
+/* 测试卡号：模板输入 / 多行校验输入 / 中性标签 */
+.tc-template {
+  flex: 0 1 320px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.tc-textarea {
+  flex: 1;
+  min-height: 60px;
+  resize: none;
+  font-family: var(--font-mono);
+  line-height: 1.7;
+  box-sizing: border-box;
+}
+
+.tc-bins {
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.badge-neutral {
+  background: var(--surface-1);
+  color: var(--muted);
+}
+
+/* 测试段胶囊是 <button>，补上按钮默认色（.algo-chip 原为 label 复用） */
+.tc-bins .algo-chip {
+  color: var(--fg);
+}
